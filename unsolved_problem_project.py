@@ -1,6 +1,12 @@
 import json
 from time import sleep
 import requests
+from sqlalchemy.testing import db
+
+from models import Unsolved_Problem
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from database import SessionLocal, get_db
 import sqlite3
 "from db_setting import db_setting"
 
@@ -30,7 +36,7 @@ def get_solved(user_id, pages, items):
     user_id와 check_user를 통해 받아온 pages와 items를 통해 해당 user가 푼 문제들의 번호를 (level의 내림차순) list로 반환
     :param str user_id: 유저 id
     :param int pages: 해당 유저가 푼 문제 페이지 수
-    :param list items: 해당 유저가 푼 문제들에 대한 정보 배열  
+    :param list items: 해당 유저가 푼 문제들에 대한 정보 배열
     :return list solved_problems: 해당 유저가 푼 문제들의 번호 list
     """
     url = f"https://solved.ac/api/v3/search/problem?query=s%40{user_id}&sort=level&direction=desc"
@@ -128,7 +134,7 @@ def get_problem_by_level(level):
             print("get_problem_by_level 요청 실패")
     return problems
 
-def get_unsolved_by_group(group_id):
+def get_unsolved_by_group(group_id, db:Session):
     """
     입력된 group_id의 그룹 유저들이 풀지 않은 문제들을 level별로 반환
     :param str group_id: 그룹 id
@@ -143,6 +149,10 @@ def get_unsolved_by_group(group_id):
             print(f"{level} 레벨의 문제는 전부 풀었습니다.")
         else:
             unsolved_problem.update(unsolved_level_problem)
+    for problem_num, problem_lev in unsolved_problem.items():
+        unsolved_problem = Unsolved_Problem(problem_num=problem_num, problem_lev=problem_lev)
+        db.add(unsolved_problem)
+    db.commit()
     return unsolved_problem
 
 def get_solved_in_24hr(prev_problem, current_problem):
@@ -173,6 +183,11 @@ solved_in_group = get_solved_by_group(group_id)
 print(solved_in_group)
 """
 
-unsolved_problems = get_unsolved_by_group(group_id)
-print(unsolved_problems)
-print(len(unsolved_problems))
+# unsolved_problems = get_unsolved_by_group(group_id)
+# print(unsolved_problems)
+# print(len(unsolved_problems))
+if __name__ == "__main__":
+    group_id = 600
+    db = SessionLocal()
+    unsolved_problems = get_unsolved_by_group(group_id, db)
+    db.close()

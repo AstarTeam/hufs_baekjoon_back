@@ -6,6 +6,8 @@ from database import SessionLocal, get_db
 from models import Unsolved_Problem
 from unsolved_problem_project import get_unsolved_by_group
 
+from domain.unsolved_problem import unsolved_problem_router
+
 app = FastAPI()
 
 @app.post("/unsolved_by_group/{group_id}")
@@ -17,4 +19,5 @@ async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Unsolved problems saved successfully"}
 
-
+# app 객체에 include_router 메서드를 사용하여 question_router.py 파일의 router 객체를 등록
+app.include_router(unsolved_problem_router.router)

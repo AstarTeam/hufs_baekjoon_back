@@ -203,13 +203,25 @@ def get_unsolved_by_group(group_id):
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
 
+    # unsolved_problem 테이블 초기화
+    cur.execute("DELETE FROM unsolved_problem")
+    #cur.execute("UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = 'unsolved_problem'")
+    conn.commit()
+    cur.close()
+    conn.close()
+
     solved_problem = get_solved_by_group(group_id)
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
     # 그룹이 푼 문제를 problem 테이블에 저장
     for problem in solved_problem:
         cur.execute("INSERT OR IGNORE INTO problem(id) VALUES(?)", (problem,))
     conn.commit()
     cur.close()
     conn.close()
+
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
     unsolved_problem = list()
     for level in range(1, 31):
         level_problem = get_problem_by_level(level)
@@ -218,6 +230,12 @@ def get_unsolved_by_group(group_id):
             print(f"{level} 레벨의 문제는 전부 풀었습니다.")
         else:
             unsolved_problem.extend(unsolved_level_problem)
+
+    for problem in unsolved_problem:
+        cur.execute("INSERT INTO unsolved_problem (id, title, level) VALUES (?, ?, ?)", (problem[0], problem[1], problem[2]))
+    conn.commit()
+    cur.close()
+    conn.close()
     return unsolved_problem
 
 def get_solved_in_24hr(prev_problem, current_problem):
@@ -232,7 +250,7 @@ def get_solved_in_24hr(prev_problem, current_problem):
     return solved_in_24hr
 
 user_id = "rbals980"
-group_id = 600
+group_id = 405
 
 """
 pages, items = check_user(user_id)

@@ -20,12 +20,12 @@ async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/unsolved_by_HUFS")  # <- 괄호 안 url 문자열은 예시임
-def unsolved_problems(db: Session = Depends(get_db)):  # 안 푼 문제 반환
-    get_unsolved_problems = db.query(UnsolvedProblem).all()
-    return get_unsolved_problems
+def get_unsolved_problems(db: Session = Depends(get_db)):  # 안 푼 문제 반환
+    unsolved_problems = db.query(UnsolvedProblem).all()
+    return unsolved_problems
 
 
 @app.get("/user_info")
-def user_info(db: Session = Depends(get_db)):
-    get_user_info = db.query(User).all()
-    return get_user_info
+def get_user_info(db: Session = Depends(get_db)):
+    user_info = db.query(User).all()
+    return user_info

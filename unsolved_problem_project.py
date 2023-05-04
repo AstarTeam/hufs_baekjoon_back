@@ -225,7 +225,7 @@ def get_unsolved_by_group(group_id):
     unsolved_problem = list()
     for level in range(1, 31):
         level_problem = get_problem_by_level(level)
-        unsolved_level_problem = [(x[0], x[1], level) for x in level_problem if x not in tuple(solved_problem)]
+        unsolved_level_problem = [(x[0], x[1], level) for x in level_problem if x[0] not in solved_problem]
         if len(unsolved_level_problem) == 0:
             print(f"{level} 레벨의 문제는 전부 풀었습니다.")
         else:
@@ -250,7 +250,7 @@ def get_solved_in_24hr(prev_problem, current_problem):
     return solved_in_24hr
 
 user_id = "rbals980"
-group_id = 405
+group_id = 405 #600
 
 """
 pages, items = check_user(user_id)

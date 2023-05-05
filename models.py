@@ -16,14 +16,15 @@ class UnsolvedProblem(Base):
 class Rank(Base):
     __tablename__ = "rank"
 
-    hufs_now_rank = Column(Integer, nullable=False)
-    hufs_pre_rank = Column(Integer, nullable=True)
+    hufs_rank = Column(Integer, nullable=False)
     hufs_now_solved = Column(Integer, nullable=False)
     hufs_pre_solved = Column(Integer, nullable=True)
     high_rank_name = Column(String(255), nullable=False)
-    high_rank_solved = Column(Integer, nullable=False)
+    high_rank_now_solved = Column(Integer, nullable=False)
+    high_rank_pre_solved = Column(Integer, nullable=True)
     low_rank_name = Column(String(255), nullable=False)
-    low_rank_solved = Column(Integer, nullable=False)
+    low_rank_now_solved = Column(Integer, nullable=False)
+    low_rank_pre_solved = Column(Integer, nullable=True)
 
 
 class User(Base):

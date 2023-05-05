@@ -1,7 +1,8 @@
 import sqlite3
 
+
 def db_setting(group_id):
-    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    conn = sqlite3.connect(str(group_id) + '_unsolved.db')
     cur = conn.cursor()
 
     # 유저 별 이름, 푼 문제 수 저장

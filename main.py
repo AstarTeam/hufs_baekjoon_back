@@ -22,9 +22,12 @@ async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
 
 
 @app.get("/unsolved_by_HUFS/")  # <- 괄호 안 url 문자열은 예시임
-async def get_unsolved_problems(db: Session = Depends(get_db)):  # 안 푼 문제 반환
-    unsolved_problems = crud.get_unsolved_problems(db)
-    return unsolved_problems
+async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, size: int = 15):  # 안 푼 문제 반환
+    total, _problem_list = crud.get_unsolved_problems(db, skip=page * size, limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
 
 
 @app.get("/problem_list_ordered_by_lev/")

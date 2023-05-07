@@ -48,6 +48,25 @@ async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), pa
     }
 
 
+@app.get("/problem_list_ordered_by_challengers/")
+async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db), page: int = 0, size: int = 15):
+    total, _problem_list = crud.get_problem_list_ordered_by_challengers(db, skip=page * size, limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+@app.get("/problem_list_ordered_by_challengers_desc/")
+async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
+    total, _problem_list = crud.get_problem_list_ordered_by_challengers_desc(db, skip=page * size, limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+
 @app.get("/ranking_info/")
 async def get_ranking_info(db: Session = Depends(get_db)):
     ranking_info = crud.get_ranking_info(db)

@@ -11,7 +11,7 @@ def db_setting(group_id):
     # 각 레벨 별 문제 수, 문제 정보(문제 번호, 제목) 저장
     cur.execute('CREATE TABLE IF NOT EXISTS level_problem(level int PRIMARY KEY, count int, problem_data TEXT)')
     # 그룹에서 안 푼 모든 문제 번호 저장
-    cur.execute('CREATE TABLE IF NOT EXISTS unsolved_problem(id int PRIMARY KEY, title text, level int)')
+    cur.execute('CREATE TABLE IF NOT EXISTS unsolved_problem(problem_num int PRIMARY KEY, problem_title text, problem_lev int, problem_link text)')
 
     conn.commit()
     cur.close()

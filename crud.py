@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 
 
 def get_unsolved_problems(db: Session, skip: int = 0, limit: int = 15):
-    problem_list = db.query(UnsolvedProblem).offset(skip).limit(limit).all()
-    total = problem_list.count()
+    _problem_list = db.query(UnsolvedProblem)
+
+    total = _problem_list.count()
+    problem_list = _problem_list.offset(skip).limit(limit).all()
     return total, problem_list
 
 

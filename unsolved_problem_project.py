@@ -211,6 +211,16 @@ def get_unsolved_by_group(group_id):
     solved_problem = get_solved_by_group(group_id)
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
+
+    # 24시간 안에 풀린 문제 problem_24hr에 저장
+    cur.execute("DELETE FROM problem_24hr")
+    cur.execute("SELECT * FROM problem") 
+    prev_problem = [row[0] for row in cur.fetchall()]
+    solved_in_24hr = get_solved_in_24hr(prev_problem, solved_problem)
+
+    for problem in solved_in_24hr:
+        cur.execute("INSERT OR IGNORE INTO problem_24hr(id) VALUES(?)", (problem,))
+
     # 그룹이 푼 문제를 problem 테이블에 저장
     for problem in solved_problem:
         cur.execute("INSERT OR IGNORE INTO problem(id) VALUES(?)", (problem,))
@@ -242,13 +252,13 @@ def get_solved_in_24hr(prev_problem, current_problem):
     24시간 안에 풀린 문제들 반환
     :param set prev_problem: 24시간 전까지 풀린 문제들
     :param set current_problem: 현재까지 풀린 문제들
-    :return set solved_in_24hr: 24시간 안에 풀린 문제들의 set
+    :return list solved_in_24hr: 24시간 안에 풀린 문제들의 list
     """
-    solved_in_24hr = set()
+    solved_in_24hr = list()
     solved_in_24hr = [x for x in current_problem if x not in prev_problem]
     return solved_in_24hr
 
-group_id = 405
+group_id = 600 #405
 
 db_setting(group_id)
 unsolved_problems = get_unsolved_by_group(group_id)

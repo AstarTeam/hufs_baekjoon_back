@@ -17,7 +17,7 @@ class UnsolvedProblem(Base):
 class Rank(Base):
     __tablename__ = "rank"
 
-    hufs_rank = Column(Integer, primary_key=False)
+    hufs_rank = Column(Integer, primary_key=True)
     hufs_now_solved = Column(Integer, nullable=False)
     hufs_pre_solved = Column(Integer, nullable=True)
     high_rank_name = Column(String(255), nullable=False)

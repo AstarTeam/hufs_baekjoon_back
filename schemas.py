@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 
 class ProblemBase(BaseModel):
@@ -19,3 +19,15 @@ class User(BaseModel):
     user_name: str
     solved_count: int
     user_baekjoon_id: str
+
+
+# 데이터 명세 7 - PUT 마이페이지
+class UserUpdateName(BaseModel):
+    user_id: str
+    user_name: str
+
+
+# 데이터 명세 7 - PUT 마이페이지
+class UserUpdatePw(BaseModel):
+    user_id: str
+    user_pw: str

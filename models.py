@@ -34,5 +34,6 @@ class User(Base):
     user_id = Column(String(255), primary_key=True)
     user_pw = Column(String(255), index=True)
     user_name = Column(String(255), index=True)
-    user_solved_count = Column(Integer, nullable=False)
+    user_solved_count = Column(Integer, nullable=False)   # 회원의 누적 푼 문제 수
     user_baekjoon_id = Column(String(255), nullable=False)
+    user_rank = Column(Integer, nullable=False)   # 회원의 등수

@@ -260,7 +260,7 @@ def get_solved_in_24hr(prev_problem, current_problem):
 
 group_id = 600 #405
 
-db_setting(group_id)
-unsolved_problems = get_unsolved_by_group(group_id)
-print(unsolved_problems)
-print(len(unsolved_problems))
+# db_setting(group_id)
+# unsolved_problems = get_unsolved_by_group(group_id)
+# print(unsolved_problems)
+# print(len(unsolved_problems))

@@ -1,14 +1,14 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
-
 from pydantic import BaseModel
 
+import os
+import crud
+import schemas   # 라우터 함수 작성-> schemas 추가
 from database import SessionLocal, get_db
 from models import UnsolvedProblem, User
 from unsolved_problem_project import get_unsolved_by_group
 
-import crud
-import schemas
 
 app = FastAPI()
 
@@ -104,3 +104,24 @@ def user_name_check(_user_name: schemas.UserCreateCheckName, db: Session = Depen
 def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db)):
     crud.create_user(db=db, user_create=_user_create)
     return {"message": "회원가입이 완료되었습니다."}
+
+
+# 데이터 명세 7 - GET 마이페이지
+@app.get("/my_page/read/")
+async def get_my_page(db: Session = Depends(get_db)):
+    my_page = crud.get_my_page(db)
+    return my_page
+
+
+# 데이터 명세 7 - PUT 마이페이지(닉네임
+@app.put("/my_page/update/name/", status_code=status.HTTP_204_NO_CONTENT)
+async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session = Depends(get_db)):
+    db_user = crud.get_one_user_info(db)
+    crud.update_my_page_name(db=db, db_user=db_user, user_update=_user_update)
+
+
+# 데이터 명세 7 - PUT 마이페이지(비밀번호)
+@app.put("/my_page/update/password/", status_code=status.HTTP_204_NO_CONTENT)
+async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Session = Depends(get_db)):
+    db_user = crud.get_one_user_info(db)
+    crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)

@@ -63,6 +63,11 @@ def create_user(db: Session, user_create=schemas.UserCreate):
     db.commit()
 
 
-def get_existing_user(db: Session, user_create: schemas.UserCreate):
-    return db.query(User).filter((User.user_id == user_create.user_id) |
-                                 (User.user_name == user_create.user_name)).first()
+def get_user_by_id(db: Session, user_id: schemas.UserCreateCheckId):
+    return db.query(User).filter(User.user_id == user_id.user_id).first()
+
+
+def get_user_by_name(db: Session, user_name: schemas.UserCreateCheckName):
+    return db.query(User).filter(User.user_name == user_name.user_name).first()
+
+

@@ -25,3 +25,11 @@ class UserCreate(BaseModel):
     user_id: str
     user_name: str
     user_pw: str
+
+
+class UserCreateCheckId(BaseModel):
+    user_id: str
+
+
+class UserCreateCheckName(BaseModel):
+    user_name: str

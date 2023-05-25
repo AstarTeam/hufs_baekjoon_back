@@ -67,9 +67,7 @@ def get_one_user_info(db: Session, user_id: str):   # 특정 유저 정보 반�
 # 데이터 명세 5 - POST 회원가입(작성중)
 def create_user(db: Session, user_create=schemas.UserCreate):
     db_user = User(user_id=user_create.user_id, user_pw=pwd_context.hash(user_create.user_pw),
-                   user_name=user_create.user_name, user_baekjoon_id=user_create.user_baekjoon_id,
-                   user_rand=user_create.user_rand)
-
+                   user_name=user_create.user_name)
     db.add(db_user)
     db.commit()
 

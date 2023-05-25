@@ -22,8 +22,10 @@ class User(BaseModel):
 
 
 # 데이터 명세 5 - 회원가입(작성중)
-class UserCreate(User):
-    user_img: bytes = None
+class UserCreate(BaseModel):
+    user_id: str
+    user_name: str
+    user_pw: str
 
 
 # 데이터 명세 7 - PUT 마이페이지

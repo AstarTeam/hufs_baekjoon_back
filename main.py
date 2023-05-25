@@ -120,7 +120,3 @@ async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Sessio
 
 
 # 데이터 명세 9 = GET 마이페이지(난수 받기)
-@app.get("/my_page/read/random/", status_code=status.HTTP_204_NO_CONTENT)
-async def get_my_page_random(_user_id: schemas. ,db: Session = Depends(get_db)):
-    db_user = crud.get_rand(db)
-    return db_user

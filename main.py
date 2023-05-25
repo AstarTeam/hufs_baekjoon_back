@@ -105,15 +105,22 @@ async def get_my_page(db: Session = Depends(get_db)):
     return my_page
 
 
-# 데이터 명세 7 - PUT 마이페이지(닉네임
+# 데이터 명세 8 - PUT 마이페이지(닉네임)
 @app.put("/my_page/update/name/", status_code=status.HTTP_204_NO_CONTENT)
 async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session = Depends(get_db)):
     db_user = crud.get_one_user_info(db)
     crud.update_my_page_name(db=db, db_user=db_user, user_update=_user_update)
 
 
-# 데이터 명세 7 - PUT 마이페이지(비밀번호)
+# 데이터 명세 8 - PUT 마이페이지(비밀번호)
 @app.put("/my_page/update/password/", status_code=status.HTTP_204_NO_CONTENT)
 async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Session = Depends(get_db)):
     db_user = crud.get_one_user_info(db)
     crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)
+
+
+# 데이터 명세 9 = GET 마이페이지(난수 받기)
+@app.get("/my_page/read/random/", status_code=status.HTTP_204_NO_CONTENT)
+async def get_my_page_random(_user_id: schemas. ,db: Session = Depends(get_db)):
+    db_user = crud.get_rand(db)
+    return db_user

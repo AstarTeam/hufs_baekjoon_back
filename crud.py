@@ -2,6 +2,7 @@ from passlib.context import CryptContext
 from models import UnsolvedProblem, Rank, User
 import schemas  # 데이터 명세 5 - 회원가입
 from sqlalchemy.orm import Session
+from random import *
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -101,3 +102,12 @@ def update_my_page_pw(db: Session, db_user: User, user_update: schemas.UserUpdat
     db_user.user_pw = pwd_context.hash(user_update.user_pw)
     db.add(db_user)
     db.commit()
+
+
+# 데이터 명세 9 - GET 마이페이지(백준 인증) - 난수 생성 및 반환
+def get_rand(db: Session, db_user: User):
+    rand = randint(100000, 999999)
+    db_user.user_rand = rand
+    db.add(db_user)
+    db.commit()
+    return rand

@@ -37,3 +37,4 @@ class User(Base):
     user_solved_count = Column(Integer, nullable=False)   # 회원의 누적 푼 문제 수
     user_baekjoon_id = Column(String(255), nullable=False)
     user_rank = Column(Integer, nullable=False)   # 회원의 등수
+    user_rand = Column(Integer, nullable=True)   # 회원의 랜덤 문자열

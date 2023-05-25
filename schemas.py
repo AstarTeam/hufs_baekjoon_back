@@ -23,7 +23,6 @@ class User(BaseModel):
 
 # 데이터 명세 5 - 회원가입(작성중)
 class UserCreate(User):
-    user_rand: str
     user_img: bytes = None
 
 
@@ -37,3 +36,9 @@ class UserUpdateName(BaseModel):
 class UserUpdatePw(BaseModel):
     user_id: str
     user_pw: str
+
+
+# 데이터 명세 9 - GET 마이페이지(백준 인증) - 난수 생성 및 반환
+class UserRand(BaseModel):
+    user_id: str
+    user_rand: str

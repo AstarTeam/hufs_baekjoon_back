@@ -1,8 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
-
 from pydantic import BaseModel
-from starlette import status   # 추가됨
 
 import os
 import crud
@@ -10,6 +8,7 @@ import schemas   # 라우터 함수 작성-> schemas 추가
 from database import SessionLocal, get_db
 from models import UnsolvedProblem, User
 from unsolved_problem_project import get_unsolved_by_group
+
 
 app = FastAPI()
 
@@ -81,6 +80,14 @@ async def get_user_info(db: Session = Depends(get_db)):
     user_info = crud.get_user_info(db)
     return user_info
 
+
+# 데이터 명세 5. POST 회원가입
+@app.post("/user_create/", status_code=status.HTTP_204_NO_CONTENT)
+def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db)):
+    user = crud.get_existing_user(db, user_create=_user_create)
+    if user:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
+    crud.create_user(db=db, user_create=_user_create)
 
 # 데이터 명세 7 - GET 마이페이지
 @app.get("/my_page/read/")

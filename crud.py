@@ -4,6 +4,9 @@ import schemas  # 데이터 명세 5 - 회원가입
 from sqlalchemy.orm import Session
 
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
 def get_unsolved_problems(db: Session, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem)
 
@@ -52,6 +55,17 @@ def get_ranking_info(db: Session):
 def get_user_info(db: Session):
     user_info = db.query(User).all()
     return user_info
+
+
+# 데이터 명세 5 - POST 회원가입(작성중)
+def create_user(db: Session, user_create=schemas.UserCreate):
+    db_user = User(user_id=user_create.user_id, user_pw=pwd_context.hash(user_create.user_pw),
+                   user_name=user_create.user_name)
+
+
+def get_existing_user(db: Session, user_create: schemas.UserCreate):
+    return db.query(User).filter((User.user_id == user_create.user_id) |
+                                 (User.user_name == user_create.user_name)).first()
 
 
 # 데이터 명세 7 - GET 마이페이지

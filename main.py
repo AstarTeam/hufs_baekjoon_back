@@ -81,13 +81,30 @@ async def get_user_info(db: Session = Depends(get_db)):
     return user_info
 
 
-# 데이터 명세 5. POST 회원가입
-@app.post("/user_create/", status_code=status.HTTP_204_NO_CONTENT)
-def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db)):
-    user = crud.get_existing_user(db, user_create=_user_create)
+# 데이터 명세 5. POST 회원가입 - 아이디 중복 확인
+@app.post("/user_create/user_id_check/")
+def user_id_check(_user_id: schemas.UserCreateCheckId, db: Session = Depends(get_db)):
+    user = crud.get_user_by_id(db, user_id=_user_id)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
+    return {"message": "사용 가능한 아이디입니다."}
+
+
+# 데이터 명세 5. POST 회원가입 - 이름 중복 확인
+@app.post("/user_create/user_name_check/")
+def user_name_check(_user_name: schemas.UserCreateCheckName, db: Session = Depends(get_db)):
+    user = crud.get_user_by_name(db, user_name=_user_name)
+    if user:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
+    return {"message": "사용 가능한 이름입니다."}
+
+
+# 데이터 명세 5. POST 회원가입
+@app.post("/user_create/join/")
+def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db)):
     crud.create_user(db=db, user_create=_user_create)
+    return {"message": "회원가입이 완료되었습니다."}
+
 
 # 데이터 명세 7 - GET 마이페이지
 @app.get("/my_page/read/")

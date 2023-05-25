@@ -37,3 +37,11 @@ class UserUpdateName(BaseModel):
 class UserUpdatePw(BaseModel):
     user_id: str
     user_pw: str
+
+
+class UserCreateCheckId(BaseModel):
+    user_id: str
+
+
+class UserCreateCheckName(BaseModel):
+    user_name: str

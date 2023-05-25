@@ -1,14 +1,22 @@
+from datetime import timedelta, datetime
+
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
+from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 import os
 import crud
 import schemas   # 라우터 함수 작성-> schemas 추가
+from crud import pwd_context
 from database import SessionLocal, get_db
 from models import UnsolvedProblem, User
 from unsolved_problem_project import get_unsolved_by_group
 
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
+SECRET_KEY = "4ab2fce7a6bd79e1c014396315ed322dd6edb1c5d975c6b74a2904135172c03c"
+ALGORITHM = "HS256"
 
 app = FastAPI()
 
@@ -68,7 +76,6 @@ async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get
     }
 
 
-
 @app.get("/ranking_info/")
 async def get_ranking_info(db: Session = Depends(get_db)):
     ranking_info = crud.get_ranking_info(db)
@@ -106,6 +113,35 @@ def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db))
     return {"message": "회원가입이 완료되었습니다."}
 
 
+# 데이터 명세 6. POST 로그인
+@app.post("/login/", response_model=schemas.Token)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
+                           db: Session = Depends(get_db)):
+
+    # check user and password
+    user = crud.get_user(db, form_data.username)
+    if not user or not pwd_context.verify(form_data.password, user.user_pw):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="아이디 또는 비밀번호가 잘못되었습니다.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # make access token
+    data = {
+        "sub": user.user_id,
+        "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    }
+    access_token = jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": user.user_id,
+        "user_auth": user.user_auth
+    }
+
+
 # 데이터 명세 7 - GET 마이페이지
 @app.get("/my_page/read/")
 async def get_my_page(db: Session = Depends(get_db)):
@@ -113,7 +149,7 @@ async def get_my_page(db: Session = Depends(get_db)):
     return my_page
 
 
-# 데이터 명세 7 - PUT 마이페이지(닉네임
+# 데이터 명세 7 - PUT 마이페이지(닉네임)
 @app.put("/my_page/update/name/", status_code=status.HTTP_204_NO_CONTENT)
 async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session = Depends(get_db)):
     db_user = crud.get_one_user_info(db)
@@ -125,3 +161,4 @@ async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session 
 async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Session = Depends(get_db)):
     db_user = crud.get_one_user_info(db)
     crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)
+

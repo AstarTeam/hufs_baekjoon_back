@@ -25,6 +25,7 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     user_id: str
     user_name: str
+    user_pw: str
 
 
 # 데이터 명세 7 - PUT 마이페이지
@@ -45,3 +46,11 @@ class UserCreateCheckId(BaseModel):
 
 class UserCreateCheckName(BaseModel):
     user_name: str
+
+
+# 데이터 명세 6 - POST 로그인
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user_id: str
+    user_auth: int

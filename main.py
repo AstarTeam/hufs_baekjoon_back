@@ -1,8 +1,8 @@
 from datetime import timedelta, datetime
 
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ from unsolved_problem_project import get_unsolved_by_group
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 SECRET_KEY = "4ab2fce7a6bd79e1c014396315ed322dd6edb1c5d975c6b74a2904135172c03c"
 ALGORITHM = "HS256"
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/")
 
 app = FastAPI()
 
@@ -140,6 +141,28 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
         "user_id": user.user_id,
         "user_auth": user.user_auth
     }
+
+
+# 헤더 정보의 토큰값 읽어서 사용자 객체를 리턴
+def get_current_user(token: str = Depends(oauth2_scheme),
+                     db:Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="유효하지 않은 토큰입니다.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    else:
+        user = crud.get_user(db, user_id=user_id)
+        if user is None:
+            raise credentials_exception
+    return user
 
 
 # 데이터 명세 7 - GET 마이페이지

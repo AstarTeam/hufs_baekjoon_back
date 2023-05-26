@@ -89,6 +89,13 @@ async def get_user_info(db: Session = Depends(get_db)):
     return user_info
 
 
+# 데이터 명세 4 - GET 홈페이지 - 명예의 전당
+@app.get("/fame/")
+async def get_fame(db: Session = Depends(get_db)):
+    fame = crud.read_fame(db)
+    return fame
+
+
 # 데이터 명세 5. POST 회원가입 - 아이디 중복 확인
 @app.post("/user_create/user_id_check/")
 def user_id_check(_user_id: schemas.UserCreateCheckId, db: Session = Depends(get_db)):

@@ -57,10 +57,19 @@ def get_user_info(db: Session):
     return user_info
 
 
+# 데이터 명세 4 - GET 홈페이지 - 명예의 전당
+def read_fame(db: Session, limit: int = 10):
+    result = db.query(User.user_name, User.user_solved_count).filter(User.user_name.isnot(None))\
+        .filter(User.user_solved_count.isnot(None)).order_by(User.user_solved_count.desc()).limit(limit).all()
+    return {user_id: user_solved_count for user_id, user_solved_count in result}
+
+
 # 데이터 명세 5 - POST 회원가입(작성중)
 def create_user(db: Session, user_create=schemas.UserCreate):
     db_user = User(user_id=user_create.user_id, user_pw=pwd_context.hash(user_create.user_pw),
                    user_name=user_create.user_name)
+    db.add(db_user)
+    db.commit()
 
 
 def get_user(db: Session, user_id: str):

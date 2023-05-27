@@ -18,7 +18,7 @@ from unsolved_problem_project import get_unsolved_by_group
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 SECRET_KEY = "4ab2fce7a6bd79e1c014396315ed322dd6edb1c5d975c6b74a2904135172c03c"
 ALGORITHM = "HS256"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 app = FastAPI()
 
@@ -33,7 +33,7 @@ async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
     return {"message": "Unsolved problems saved successfully"}
 
 
-@app.get("/unsolved_by_HUFS/")  # <- 괄호 안 url 문자열은 예시임
+@app.get("/unsolved-by-HUFS")  # <- 괄호 안 url 문자열은 예시임
 async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, size: int = 15):  # 안 푼 문제 반환
     total, _problem_list = crud.get_unsolved_problems(db, skip=page * size, limit=size)
     return {
@@ -42,7 +42,7 @@ async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, si
     }
 
 
-@app.get("/problem_list_ordered_by_lev/")
+@app.get("/problem-list-ordered-by-lev")
 async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_lev(db, skip=page * size, limit=size)
     return {
@@ -51,7 +51,7 @@ async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: i
     }
 
 
-@app.get("/problem_list_ordered_by_lev_desc/")
+@app.get("/problem-list-ordered-by-lev-desc")
 async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, skip=page * size, limit=size)
     return {
@@ -60,7 +60,7 @@ async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), pa
     }
 
 
-@app.get("/problem_list_ordered_by_challengers/")
+@app.get("/problem-list-ordered-by-challengers")
 async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, skip=page * size, limit=size)
     return {
@@ -69,7 +69,7 @@ async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db),
     }
 
 
-@app.get("/problem_list_ordered_by_challengers_desc/")
+@app.get("/problem-list-ordered-by-challengers-desc")
 async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, skip=page * size, limit=size)
     return {
@@ -78,27 +78,27 @@ async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get
     }
 
 
-@app.get("/ranking_info/")
+@app.get("/ranking-info")
 async def get_ranking_info(db: Session = Depends(get_db)):
     ranking_info = crud.read_ranking_info(db)
     return ranking_info
 
 
-@app.get("/user_info/")
+@app.get("/user-info")
 async def get_user_info(db: Session = Depends(get_db)):
     user_info = crud.read_user_info(db)
     return user_info
 
 
 # 데이터 명세 4 - GET 홈페이지 - 명예의 전당
-@app.get("/fame/")
+@app.get("/fame")
 async def get_fame(db: Session = Depends(get_db)):
     fame = crud.read_fame(db)
-    return fame
+    return {"userList": fame}
 
 
 # 데이터 명세 5. 회원가입 - 아이디 중복 확인
-@app.get("/user_create/user_id_check/{user_id}/")
+@app.get("/user-create/user-id-check/{user_id}")
 def user_id_check(user_id: str, db: Session = Depends(get_db)):
     user = crud.read_user_by_id(db, user_id=user_id)
     if user:
@@ -107,7 +107,7 @@ def user_id_check(user_id: str, db: Session = Depends(get_db)):
 
 
 # 데이터 명세 5. 회원가입 - 닉네임 중복 확인
-@app.get("/user_create/user_name_check/{user_name}/")
+@app.get("/user-create/user-name-check/{user_name}")
 def user_name_check(user_name: str, db: Session = Depends(get_db)):
     user = crud.read_user_by_name(db, user_name=user_name)
     if user:
@@ -116,14 +116,14 @@ def user_name_check(user_name: str, db: Session = Depends(get_db)):
 
 
 # 데이터 명세 5. 회원가입
-@app.post("/user_create/join/")
+@app.post("/user-create/join")
 def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db)):
     crud.create_user(db=db, user_create=_user_create)
     return {"message": "회원가입이 완료되었습니다."}
 
 
 # 데이터 명세 6. POST 로그인
-@app.post("/login/", response_model=schemas.Token)
+@app.post("/login", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
                            db: Session = Depends(get_db)):
 
@@ -151,6 +151,9 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
     }
 
 
+# 데이터 명세 6.2 POST 로그아웃
+
+
 # 헤더 정보의 토큰값 읽어서 사용자 객체를 리턴
 def get_current_user(token: str = Depends(oauth2_scheme),
                      db:Session = Depends(get_db)):
@@ -174,46 +177,51 @@ def get_current_user(token: str = Depends(oauth2_scheme),
 
 
 # 데이터 명세 7 - GET 마이페이지
-@app.get("/my_page/read/")
-async def get_my_page(db: Session = Depends(get_db)):
+@app.get("/my-page/read")
+async def get_my_page(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     my_page = crud.read_my_page(db)
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인이 필요합니다.")
     return my_page
 
 
 # 데이터 명세 8.1 - PUT 마이페이지(닉네임)
-@app.put("/my_page/update/name/")
-async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session = Depends(get_db)):
-    db_user = crud.read_user(db, user_id=_user_update.user_id)
-    crud.update_my_page_name(db=db, db_user=db_user, user_update=_user_update)
+@app.put("/my-page/update/name")
+async def update_my_page_name(_update_name: str, db: Session = Depends(get_db),
+                              current_user: User = Depends(get_current_user)):
+    db_user = crud.read_user(db, user_id=current_user.user_id)
+    crud.update_my_page_name(db=db, db_user=db_user, user_update=_update_name)
     return {"message": "닉네임이 변경되었습니다."}
 
 
 # 데이터 명세 8.2 - PUT 마이페이지(비밀번호)
-@app.put("/my_page/update/password/")
-async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Session = Depends(get_db)):
-    db_user = crud.read_user(db, user_id=_user_update.user_id)
-    crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)
+@app.put("/my-page/update/password")
+async def update_my_page_password(_update_pw: str, db: Session = Depends(get_db),
+                                  current_user: User = Depends(get_current_user)):
+    db_user = crud.read_user(db, user_id=current_user.user_id)
+    crud.update_my_page_pw(db=db, db_user=db_user, user_update=_update_pw)
     return {"message": "비밀번호가 변경되었습니다."}
 
 
 # 데이터 명세 9 - GET 백준 인증 - 난수 받기
-@app.get("/my_page/rand/{user_id}/")
-async def get_my_page_rand(user_id: str, db: Session = Depends(get_db)):
-    db_user = crud.read_user(db, user_id=user_id)
+@app.get("/my-page/rand/{user_id}")
+async def get_my_page_rand(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_user = crud.read_user(db, user_id=current_user.user_id)
     rand = crud.read_random_number(db=db, user_id=db_user.user_id)
     return rand
 
 
 # 데이터 명세 10 - POST 백준 인증
-@app.post("/my_page/auth/")
-async def post_my_page_auth(file: UploadFile, boj_id: str, user_id: str, db: Session = Depends(get_db)):
+@app.post("/my-page/auth")
+async def post_my_page_auth(file: UploadFile, boj_id: str, current_user: User = Depends(get_current_user),
+                            db: Session = Depends(get_db)):
     UPLOAD_DIR = "./photo"  # 이미지를 저장할 서버 경로
 
     content = await file.read()
-    filename = f"{user_id}.jpg"  # uuid로 유니크한 파일명으로 변경
+    filename = f"{current_user.user_id}.jpg"  # uuid로 유니크한 파일명으로 변경
     with open(os.path.join(UPLOAD_DIR, filename), "wb") as fp:
         fp.write(content)  # 서버 로컬 스토리지에 이미지 저장 (쓰기)
 
-    db_user = crud.read_user(db, user_id=user_id)
+    db_user = crud.read_user(db, user_id=current_user.user_id)
     crud.update_my_page_auth(db=db, db_user=db_user, boj_id=boj_id)
     return {"message": "인증 신청이 완료되었습니다."}

@@ -30,13 +30,11 @@ class UserCreate(BaseModel):
 
 # 데이터 명세 7 - PUT 마이페이지
 class UserUpdateName(BaseModel):
-    user_id: str
     user_name: str
 
 
 # 데이터 명세 7 - PUT 마이페이지
 class UserUpdatePw(BaseModel):
-    user_id: str
     user_pw: str
 
 

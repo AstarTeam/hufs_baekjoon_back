@@ -43,7 +43,7 @@ async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, si
 
 @app.get("/problem_list_ordered_by_lev/")
 async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.get_problem_list_ordered_by_lev(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_lev(db, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -52,7 +52,7 @@ async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: i
 
 @app.get("/problem_list_ordered_by_lev_desc/")
 async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.get_problem_list_ordered_by_lev_desc(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -61,7 +61,7 @@ async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), pa
 
 @app.get("/problem_list_ordered_by_challengers/")
 async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.get_problem_list_ordered_by_challengers(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -70,7 +70,7 @@ async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db),
 
 @app.get("/problem_list_ordered_by_challengers_desc/")
 async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.get_problem_list_ordered_by_challengers_desc(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -79,13 +79,13 @@ async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get
 
 @app.get("/ranking_info/")
 async def get_ranking_info(db: Session = Depends(get_db)):
-    ranking_info = crud.get_ranking_info(db)
+    ranking_info = crud.read_ranking_info(db)
     return ranking_info
 
 
 @app.get("/user_info/")
 async def get_user_info(db: Session = Depends(get_db)):
-    user_info = crud.get_user_info(db)
+    user_info = crud.read_user_info(db)
     return user_info
 
 
@@ -99,7 +99,7 @@ async def get_fame(db: Session = Depends(get_db)):
 # 데이터 명세 5. POST 회원가입 - 아이디 중복 확인
 @app.post("/user_create/user_id_check/")
 def user_id_check(_user_id: schemas.UserCheckId, db: Session = Depends(get_db)):
-    user = crud.get_user_by_id(db, user_id=_user_id)
+    user = crud.read_user_by_id(db, user_id=_user_id)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
     return {"message": "사용 가능한 아이디입니다."}
@@ -108,7 +108,7 @@ def user_id_check(_user_id: schemas.UserCheckId, db: Session = Depends(get_db)):
 # 데이터 명세 5. POST 회원가입 - 이름 중복 확인
 @app.post("/user_create/user_name_check/")
 def user_name_check(_user_name: schemas.UserCheckName, db: Session = Depends(get_db)):
-    user = crud.get_user_by_name(db, user_name=_user_name.user_name)
+    user = crud.read_user_by_name(db, user_name=_user_name.user_name)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
     return {"message": "사용 가능한 이름입니다."}
@@ -127,7 +127,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
                            db: Session = Depends(get_db)):
 
     # check user and password
-    user = crud.get_user(db, form_data.username)
+    user = crud.read_user(db, form_data.username)
     if not user or not pwd_context.verify(form_data.password, user.user_pw):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -166,7 +166,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
     except JWTError:
         raise credentials_exception
     else:
-        user = crud.get_user(db, user_id=user_id)
+        user = crud.read_user(db, user_id=user_id)
         if user is None:
             raise credentials_exception
     return user
@@ -175,14 +175,14 @@ def get_current_user(token: str = Depends(oauth2_scheme),
 # 데이터 명세 7 - GET 마이페이지
 @app.get("/my_page/read/")
 async def get_my_page(db: Session = Depends(get_db)):
-    my_page = crud.get_my_page(db)
+    my_page = crud.read_my_page(db)
     return my_page
 
 
 # 데이터 명세 8.1 - PUT 마이페이지(닉네임)
 @app.put("/my_page/update/name/")
 async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=_user_update.user_id)
+    db_user = crud.read_user(db, user_id=_user_update.user_id)
     crud.update_my_page_name(db=db, db_user=db_user, user_update=_user_update)
     return {"message": "닉네임이 변경되었습니다."}
 
@@ -190,6 +190,6 @@ async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session 
 # 데이터 명세 8.2 - PUT 마이페이지(비밀번호)
 @app.put("/my_page/update/password/")
 async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=_user_update.user_id)
+    db_user = crud.read_user(db, user_id=_user_update.user_id)
     crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)
     return {"message": "비밀번호가 변경되었습니다."}

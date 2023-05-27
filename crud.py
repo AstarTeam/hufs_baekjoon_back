@@ -15,7 +15,7 @@ def get_unsolved_problems(db: Session, skip: int = 0, limit: int = 15):
     return total, problem_list
 
 
-def get_problem_list_ordered_by_lev(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_lev(db: Session, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.asc())
 
     total = _problem_list.count()
@@ -23,7 +23,7 @@ def get_problem_list_ordered_by_lev(db: Session, skip: int = 0, limit: int = 15)
     return total, problem_list
 
 
-def get_problem_list_ordered_by_lev_desc(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_lev_desc(db: Session, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.desc())
 
     total = _problem_list.count()
@@ -31,7 +31,7 @@ def get_problem_list_ordered_by_lev_desc(db: Session, skip: int = 0, limit: int 
     return total, problem_list
 
 
-def get_problem_list_ordered_by_challengers(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_challengers(db: Session, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.asc())
 
     total = _problem_list.count()
@@ -39,7 +39,7 @@ def get_problem_list_ordered_by_challengers(db: Session, skip: int = 0, limit: i
     return total, problem_list
 
 
-def get_problem_list_ordered_by_challengers_desc(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_challengers_desc(db: Session, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.desc())
 
     total = _problem_list.count()
@@ -47,12 +47,12 @@ def get_problem_list_ordered_by_challengers_desc(db: Session, skip: int = 0, lim
     return total, problem_list
 
 
-def get_ranking_info(db: Session):
+def read_ranking_info(db: Session):
     ranking_info = db.query(Rank).all()
     return ranking_info
 
 
-def get_user_info(db: Session):
+def read_user_info(db: Session):
     user_info = db.query(User).all()
     return user_info
 
@@ -72,20 +72,20 @@ def create_user(db: Session, user_create=schemas.UserCreate):
     db.commit()
 
 
-def get_user(db: Session, user_id: str):
+def read_user(db: Session, user_id: str):
     return db.query(User).filter(User.user_id == user_id).first()
 
 
-def get_user_by_id(db: Session, user_id: schemas.UserCheckId):
+def read_user_by_id(db: Session, user_id: schemas.UserCheckId):
     return db.query(User).filter(User.user_id == user_id.user_id).first()
 
 
-def get_user_by_name(db: Session, user_name: str):
+def read_user_by_name(db: Session, user_name: str):
     return db.query(User).filter(User.user_name == user_name).first()
 
 
 # 데이터 명세 7 - GET 마이페이지
-def get_my_page(db: Session):
+def read_my_page(db: Session):
     my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank).all()
     return my_page
 

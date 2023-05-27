@@ -270,7 +270,8 @@ def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_probl
     """
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
-    
+
+    #cur.execute("INSERT OR IGNORE INTO user(user_baekjoon_id) VALUES(?)", (user,))
     cur.execute("SELECT user_solved_count FROM user WHERE name = ?", (user,))
     row = cur.fetchone()
     prev_solved_count = row[0]

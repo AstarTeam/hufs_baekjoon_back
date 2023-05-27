@@ -34,5 +34,8 @@ class User(Base):
     user_id = Column(String(255), primary_key=True)
     user_pw = Column(String(255), index=True)
     user_name = Column(String(255), index=True)
-    user_solved_count = Column(Integer, nullable=False)
-    user_baekjoon_id = Column(String(255), nullable=False)
+    user_solved_count = Column(Integer, nullable=True)   # 회원의 누적 푼 문제 수
+    user_baekjoon_id = Column(String(255), nullable=True)
+    user_rank = Column(Integer, nullable=True)   # 회원의 등수
+    user_rand = Column(Integer, nullable=True)   # 회원의 난수값
+    user_auth = Column(Integer, nullable=True)   # 회원의 인증 여부 (0: 미인증, 1: 인증됨, 2: 심사중)

@@ -4,7 +4,7 @@ import requests
 import sqlite3
 from db_setting import db_setting
 
-def check_user(user_id):
+def check_user(user_id, is_checking_count):
     """
     특정 유저가 푼 문제 정보 받아오기
     :param str user_id: 유저 id
@@ -30,7 +30,8 @@ def check_user(user_id):
         if user_solved is None:         # 없으면 새로운 행 (아이디, 푼 문제 수) 추가
             cur.execute("INSERT INTO user (name, solved) VALUES (?, ?)", (user_id, count))
         elif user_solved[0] == count:   # 문제 수 변경되지 않았으면 더이상 검색 X
-            pages = -1
+            if not is_checking_count:   # 랭킹에 푼 문제 수 갱신하는 경우면 아래 실행 X
+                pages = -1
         elif user_solved[0] != count:   # 문제 수 변경되었으면 solved 업데이트
             cur.execute("UPDATE user SET solved = ? WHERE name = ?", (count, user_id))
         conn.commit()
@@ -51,8 +52,6 @@ def get_solved(user_id, pages, items):
     """
     url = f"https://solved.ac/api/v3/search/problem?query=s%40{user_id}&sort=level&direction=desc"
     solved_problems = []
-    for item in items:
-        solved_problems.append(item.get("problemId"))
     for page in range(1, pages + 1):
         sleep(1)
         page_url = f"{url}&page={page}"
@@ -115,11 +114,10 @@ def get_solved_by_group(group_id):
     for user in group_users:
         print(n, " / ", len(group_users))
         n = n + 1
-        pages, items = check_user(user)
+        pages, items = check_user(user, False)
         if pages == -1:     # check_user에서 count 변하지 않은 경우 생략
             continue
         get_solved_by_user = get_solved(user, pages, items)
-        print(get_solved_by_user)
         group_problems.update(get_solved_by_user)
     return group_problems
 
@@ -196,14 +194,13 @@ def get_unsolved_by_group(group_id):
     """
     입력된 group_id의 그룹 유저들이 풀지 않은 문제들의 정보를 반환
     :param str group_id: 그룹 id
-    :return list unsolved_problem: 해당 그룹 유저들이 풀지 못 한 문제들의 정보(문제 번호, 제목, 난이도, 링크) list
+    :return list unsolved_problem: 해당 그룹 유저들이 풀지 못 한 문제들의 정보(문제 번호, 제목, 난이도) list
     """
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
 
     # unsolved_problem 테이블 초기화
     cur.execute("DELETE FROM unsolved_problem")
-    #cur.execute("UPDATE SQLITE_SEQUENCE SET seq = 0 WHERE name = 'unsolved_problem'")
     conn.commit()
     cur.close()
     conn.close()
@@ -245,6 +242,13 @@ def get_unsolved_by_group(group_id):
     conn.commit()
     cur.close()
     conn.close()
+
+    # 랭킹에 쓰이는 그룹 내 유저가 푼 누적 문제 수 DB에 저장
+    group_users = get_user_in_group(group_id)
+    for user in group_users:
+        pages, items = check_user(user, True)
+        get_solved_by_user = get_solved(user, pages, items)
+        get_users_solved_count_in_24hr(user, solved_in_24hr, get_solved_by_user)
     return unsolved_problem
 
 def get_solved_in_24hr(prev_problem, current_problem):
@@ -258,9 +262,56 @@ def get_solved_in_24hr(prev_problem, current_problem):
     solved_in_24hr = [x for x in current_problem if x not in prev_problem]
     return solved_in_24hr
 
-group_id = 600 #405
+def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_problem):
+    """
+    24시간 안에 푼 문제들 중 해당 유저가 푼 문제 수 DB에 누적하여 저장
+    :param list group_solved_problem: 24시간 안에 그룹에서 풀린 문제들
+    :param list user_solved_problem: 해당 유저가 푼 모든 문제들
+    """
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
+    
+    cur.execute("SELECT user_solved_count FROM user WHERE name = ?", (user,))
+    row = cur.fetchone()
+    prev_solved_count = row[0]
+    conn.commit()
+    cur.close()
+    conn.close()   
 
+    user_solved_in_24hr = list()
+    user_solved_in_24hr = [x for x in user_solved_problem if x in group_solved_problem]
+    total_count = prev_solved_count + len(user_solved_in_24hr)
+
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
+    cur.execute("UPDATE user SET user_solved_count = ? WHERE name = ?", (total_count, user))
+    conn.commit()
+    cur.close()
+    conn.close()   
+    return
+
+def update_user_rank(group_id):
+    """
+    해당 그룹의 모든 유저들의 누적 푼 문제수 비교하여 랭크 업데이트
+    :param int group_id: 그룹 아이디
+    """
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
+    
+    cur.execute("SELECT * FROM user")
+    cur.execute("SELECT name, RANK() OVER(ORDER BY user_solved_count DESC) rank FROM user")
+    rows = cur.fetchall()
+    for row in rows:
+        cur.execute("UPDATE user SET user_rank = ? WHERE name = ?", (row[1], row[0]))
+        conn.commit()
+                    
+    cur.close()
+    conn.close()   
+    return
+
+group_id = 600 #405
 db_setting(group_id)
 unsolved_problems = get_unsolved_by_group(group_id)
 print(unsolved_problems)
 print(len(unsolved_problems))
+update_user_rank(group_id)

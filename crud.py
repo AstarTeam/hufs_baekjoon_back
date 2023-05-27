@@ -62,7 +62,7 @@ def read_user_info(db: Session):
 def read_fame(db: Session, limit: int = 10):
     result = db.query(User.user_name, User.user_solved_count).filter(User.user_name.isnot(None))\
         .filter(User.user_solved_count.isnot(None)).order_by(User.user_solved_count.desc()).limit(limit).all()
-    return {user_id: user_solved_count for user_id, user_solved_count in result}
+    return [{"name": user_id, "count": user_solved_count} for user_id, user_solved_count in result]
 
 
 # 데이터 명세 5 - POST 회원가입(작성중)
@@ -93,15 +93,15 @@ def read_my_page(db: Session):
 
 
 # 데이터 명세 7 - PUT 마이페이지(닉네임)
-def update_my_page_name(db: Session, db_user: User, user_update: schemas.UserUpdateName):
-    db_user.user_name = user_update.user_name
+def update_my_page_name(db: Session, db_user: User, user_update: str):
+    db_user.user_name = user_update
     db.add(db_user)
     db.commit()
 
 
 # 데이터 명세 7 - PUT 마이페이지(비밀번호)
-def update_my_page_pw(db: Session, db_user: User, user_update: schemas.UserUpdatePw):
-    db_user.user_pw = pwd_context.hash(user_update.user_pw)
+def update_my_page_pw(db: Session, db_user: User, user_update: str):
+    db_user.user_pw = pwd_context.hash(user_update)
     db.add(db_user)
     db.commit()
 

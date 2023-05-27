@@ -1,7 +1,8 @@
 from passlib.context import CryptContext
 from models import UnsolvedProblem, Rank, User
-import schemas  # 데이터 명세 5 - 회원가입
+import schemas
 from sqlalchemy.orm import Session
+from random import randint
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -66,8 +67,9 @@ def read_fame(db: Session, limit: int = 10):
 
 # 데이터 명세 5 - POST 회원가입(작성중)
 def create_user(db: Session, user_create=schemas.UserCreate):
+    rand = randint(100000, 999999)
     db_user = User(user_id=user_create.user_id, user_pw=pwd_context.hash(user_create.user_pw),
-                   user_name=user_create.user_name)
+                   user_name=user_create.user_name, user_solved_count=0, user_auth=0, user_rand=rand)
     db.add(db_user)
     db.commit()
 
@@ -76,8 +78,8 @@ def read_user(db: Session, user_id: str):
     return db.query(User).filter(User.user_id == user_id).first()
 
 
-def read_user_by_id(db: Session, user_id: schemas.UserCheckId):
-    return db.query(User).filter(User.user_id == user_id.user_id).first()
+def read_user_by_id(db: Session, user_id: str):
+    return db.query(User).filter(User.user_id == user_id).first()
 
 
 def read_user_by_name(db: Session, user_name: str):
@@ -91,8 +93,6 @@ def read_my_page(db: Session):
 
 
 # 데이터 명세 7 - PUT 마이페이지(닉네임)
-# 만약 name이나 pw 중 하나만 바꾼다면, 나머지 하나는 None이 되어버리기 때문에 프론트에서 기존의 값을 넣어줘야 함
-    # name만 바꾼다면, name은 변경 값을 보내고, pw는 기존의 pw를 그대로 보내줘야함
 def update_my_page_name(db: Session, db_user: User, user_update: schemas.UserUpdateName):
     db_user.user_name = user_update.user_name
     db.add(db_user)
@@ -102,5 +102,18 @@ def update_my_page_name(db: Session, db_user: User, user_update: schemas.UserUpd
 # 데이터 명세 7 - PUT 마이페이지(비밀번호)
 def update_my_page_pw(db: Session, db_user: User, user_update: schemas.UserUpdatePw):
     db_user.user_pw = pwd_context.hash(user_update.user_pw)
+    db.add(db_user)
+    db.commit()
+
+
+# 데이터 명세 8 - GET 백준 인증 - 난수 받기
+def read_random_number(db: Session, user_id: str):
+    result = db.query(User.user_rand).filter(User.user_rand.isnot(None)).filter(User.user_id == user_id).first()
+    return {"rand": user_rand for user_rand in result}
+
+
+def update_my_page_auth(db: Session, db_user: User, boj_id: str):
+    db_user.user_auth = 2
+    db_user.user_boj_id = boj_id
     db.add(db_user)
     db.commit()

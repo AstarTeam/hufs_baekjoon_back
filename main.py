@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta, datetime
 
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
@@ -96,25 +97,25 @@ async def get_fame(db: Session = Depends(get_db)):
     return fame
 
 
-# 데이터 명세 5. POST 회원가입 - 아이디 중복 확인
-@app.post("/user_create/user_id_check/")
-def user_id_check(_user_id: schemas.UserCheckId, db: Session = Depends(get_db)):
-    user = crud.read_user_by_id(db, user_id=_user_id)
+# 데이터 명세 5. 회원가입 - 아이디 중복 확인
+@app.get("/user_create/user_id_check/{user_id}/")
+def user_id_check(user_id: str, db: Session = Depends(get_db)):
+    user = crud.read_user_by_id(db, user_id=user_id)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
     return {"message": "사용 가능한 아이디입니다."}
 
 
-# 데이터 명세 5. POST 회원가입 - 이름 중복 확인
-@app.post("/user_create/user_name_check/")
-def user_name_check(_user_name: schemas.UserCheckName, db: Session = Depends(get_db)):
-    user = crud.read_user_by_name(db, user_name=_user_name.user_name)
+# 데이터 명세 5. 회원가입 - 닉네임 중복 확인
+@app.get("/user_create/user_name_check/{user_name}/")
+def user_name_check(user_name: str, db: Session = Depends(get_db)):
+    user = crud.read_user_by_name(db, user_name=user_name)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
     return {"message": "사용 가능한 이름입니다."}
 
 
-# 데이터 명세 5. POST 회원가입
+# 데이터 명세 5. 회원가입
 @app.post("/user_create/join/")
 def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db)):
     crud.create_user(db=db, user_create=_user_create)
@@ -193,3 +194,26 @@ async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Sessio
     db_user = crud.read_user(db, user_id=_user_update.user_id)
     crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)
     return {"message": "비밀번호가 변경되었습니다."}
+
+
+# 데이터 명세 9 - GET 백준 인증 - 난수 받기
+@app.get("/my_page/rand/{user_id}/")
+async def get_my_page_rand(user_id: str, db: Session = Depends(get_db)):
+    db_user = crud.read_user(db, user_id=user_id)
+    rand = crud.read_random_number(db=db, user_id=db_user.user_id)
+    return rand
+
+
+# 데이터 명세 10 - POST 백준 인증
+@app.post("/my_page/auth/")
+async def post_my_page_auth(file: UploadFile, boj_id: str, user_id: str, db: Session = Depends(get_db)):
+    UPLOAD_DIR = "./photo"  # 이미지를 저장할 서버 경로
+
+    content = await file.read()
+    filename = f"{user_id}.jpg"  # uuid로 유니크한 파일명으로 변경
+    with open(os.path.join(UPLOAD_DIR, filename), "wb") as fp:
+        fp.write(content)  # 서버 로컬 스토리지에 이미지 저장 (쓰기)
+
+    db_user = crud.read_user(db, user_id=user_id)
+    crud.update_my_page_auth(db=db, db_user=db_user, boj_id=boj_id)
+    return {"message": "인증 신청이 완료되었습니다."}

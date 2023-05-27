@@ -98,7 +98,7 @@ async def get_fame(db: Session = Depends(get_db)):
 
 # 데이터 명세 5. POST 회원가입 - 아이디 중복 확인
 @app.post("/user_create/user_id_check/")
-def user_id_check(_user_id: schemas.UserCreateCheckId, db: Session = Depends(get_db)):
+def user_id_check(_user_id: schemas.UserCheckId, db: Session = Depends(get_db)):
     user = crud.get_user_by_id(db, user_id=_user_id)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
@@ -107,8 +107,8 @@ def user_id_check(_user_id: schemas.UserCreateCheckId, db: Session = Depends(get
 
 # 데이터 명세 5. POST 회원가입 - 이름 중복 확인
 @app.post("/user_create/user_name_check/")
-def user_name_check(_user_name: schemas.UserCreateCheckName, db: Session = Depends(get_db)):
-    user = crud.get_user_by_name(db, user_name=_user_name)
+def user_name_check(_user_name: schemas.UserCheckName, db: Session = Depends(get_db)):
+    user = crud.get_user_by_name(db, user_name=_user_name.user_name)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="이미 존재하는 사용자입니다.")
     return {"message": "사용 가능한 이름입니다."}
@@ -179,16 +179,17 @@ async def get_my_page(db: Session = Depends(get_db)):
     return my_page
 
 
-# 데이터 명세 7 - PUT 마이페이지(닉네임)
-@app.put("/my_page/update/name/", status_code=status.HTTP_204_NO_CONTENT)
+# 데이터 명세 8.1 - PUT 마이페이지(닉네임)
+@app.put("/my_page/update/name/")
 async def update_my_page_name(_user_update: schemas.UserUpdateName, db: Session = Depends(get_db)):
-    db_user = crud.get_one_user_info(db)
+    db_user = crud.get_user(db, user_id=_user_update.user_id)
     crud.update_my_page_name(db=db, db_user=db_user, user_update=_user_update)
+    return {"message": "닉네임이 변경되었습니다."}
 
 
-# 데이터 명세 7 - PUT 마이페이지(비밀번호)
-@app.put("/my_page/update/password/", status_code=status.HTTP_204_NO_CONTENT)
+# 데이터 명세 8.2 - PUT 마이페이지(비밀번호)
+@app.put("/my_page/update/password/")
 async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Session = Depends(get_db)):
-    db_user = crud.get_one_user_info(db)
+    db_user = crud.get_user(db, user_id=_user_update.user_id)
     crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)
-
+    return {"message": "비밀번호가 변경되었습니다."}

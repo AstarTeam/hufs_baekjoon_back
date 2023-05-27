@@ -76,12 +76,12 @@ def get_user(db: Session, user_id: str):
     return db.query(User).filter(User.user_id == user_id).first()
 
 
-def get_user_by_id(db: Session, user_id: schemas.UserCreateCheckId):
+def get_user_by_id(db: Session, user_id: schemas.UserCheckId):
     return db.query(User).filter(User.user_id == user_id.user_id).first()
 
 
-def get_user_by_name(db: Session, user_name: schemas.UserCreateCheckName):
-    return db.query(User).filter(User.user_name == user_name.user_name).first()
+def get_user_by_name(db: Session, user_name: str):
+    return db.query(User).filter(User.user_name == user_name).first()
 
 
 # 데이터 명세 7 - GET 마이페이지

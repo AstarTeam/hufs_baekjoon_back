@@ -40,11 +40,11 @@ class UserUpdatePw(BaseModel):
     user_pw: str
 
 
-class UserCreateCheckId(BaseModel):
+class UserCheckId(BaseModel):
     user_id: str
 
 
-class UserCreateCheckName(BaseModel):
+class UserCheckName(BaseModel):
     user_name: str
 
 

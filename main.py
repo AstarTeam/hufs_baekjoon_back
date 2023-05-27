@@ -11,7 +11,7 @@ import crud
 import schemas   # 라우터 함수 작성-> schemas 추가
 from crud import pwd_context
 from database import SessionLocal, get_db
-from models import UnsolvedProblem, User
+from models import UnsolvedProblem, User, Challenger
 from unsolved_problem_project import get_unsolved_by_group
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
@@ -21,15 +21,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/")
 
 app = FastAPI()
 
-
-@app.post("/unsolved_by_group/{group_id}")
-async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
-    unsolved_problems = get_unsolved_by_group(group_id)
-    for problem_num, problem_lev in unsolved_problems.items():
-        unsolved_problem = UnsolvedProblem(problem_num=problem_num, problem_lev=problem_lev)
-        db.add(unsolved_problem)
-    db.commit()
-    return {"message": "Unsolved problems saved successfully"}
+#
+# @app.post("/unsolved_by_group/{group_id}")
+# async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
+#     unsolved_problems = get_unsolved_by_group(group_id)
+#     for problem_num, problem_lev in unsolved_problems.items():
+#         unsolved_problem = UnsolvedProblem(problem_num=problem_num, problem_lev=problem_lev)
+#         db.add(unsolved_problem)
+#     db.commit()
+#     return {"message": "Unsolved problems saved successfully"}
 
 
 @app.get("/unsolved_by_HUFS/")  # <- 괄호 안 url 문자열은 예시임
@@ -193,3 +193,22 @@ async def update_my_page_password(_user_update: schemas.UserUpdatePw, db: Sessio
     db_user = crud.read_user(db, user_id=_user_update.user_id)
     crud.update_my_page_pw(db=db, db_user=db_user, user_update=_user_update)
     return {"message": "비밀번호가 변경되었습니다."}
+
+#도전자 수 count
+@app.post("/problem/{problem_num}/{user_name}/challenge")
+def challenge_problem(problem_num: int, user_name: str, db: Session = Depends(get_db)):
+    new_challenge = Challenger(challenger_name=user_name, challenge_problem=problem_num)
+    db.add(new_challenge)
+    problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
+    problem.problem_challengers += 1
+    db.commit()
+
+@app.post("/problem/{problem_num}/{user_name}/unchallenge")
+def unchallenge_problem(problem_num: int, user_name: str, db: Session = Depends(get_db)):
+    unchallenge = db.query(Challenger).filter(
+        Challenger.challenge_problem == problem_num,
+        Challenger.challenger_name == user_name).first()
+    db.delete(unchallenge)
+    problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
+    problem.problem_challengers -= 1
+    db.commit()

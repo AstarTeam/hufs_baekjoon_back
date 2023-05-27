@@ -11,8 +11,15 @@ class UnsolvedProblem(Base):
     problem_title = Column(String(255), index=True)
     problem_lev = Column(Integer, nullable=False)
     problem_link = Column(String(255), nullable=False)
-    problem_challengers = Column(Integer, nullable=False)
+    problem_challengers = Column(Integer, nullable=True)
 
+class Challenger(Base):
+    __tablename__ = "challengers"
+    id = Column(Integer,primary_key=True)
+    challenger_name = Column(String(255), ForeignKey("user.user_name"))
+    challenge_problem = Column(Integer, ForeignKey("unsolved_problem.problem_num"))
+    user = relationship("User", backref="challenging")
+    problem = relationship("UnsolvedProblem", backref="challengers")
 
 class Rank(Base):
     __tablename__ = "rank"

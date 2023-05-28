@@ -179,9 +179,9 @@ def get_current_user(token: str = Depends(oauth2_scheme),
 # 데이터 명세 7 - GET 마이페이지
 @app.get("/my-page/read")
 async def get_my_page(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    my_page = crud.read_my_page(db)
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="로그인이 필요합니다.")
+    my_page = crud.read_my_page(db, db_user=current_user)
     return my_page
 
 

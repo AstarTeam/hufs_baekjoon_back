@@ -87,9 +87,22 @@ def read_user_by_name(db: Session, user_name: str):
 
 
 # 데이터 명세 7 - GET 마이페이지
-def read_my_page(db: Session):
-    my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank).all()
-    return my_page
+def read_my_page(db: Session, db_user: User):
+    if db_user.user_auth == 1:
+        my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank,
+                           User.user_baekjoon_id).filter(User.user_id.isnot(None))\
+            .filter(User.user_name.isnot(None)).filter(User.user_solved_count.isnot(None))\
+            .filter(User.user_rank.isnot(None)).filter(User.user_baekjoon_id.isnot(None))\
+            .filter(User.user_id == db_user.user_id).first()
+        return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2],
+                "user_rank": my_page[3], "user_baekjoon_id": my_page[4]}
+    else:
+        my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank)\
+            .filter(User.user_id.isnot(None)).filter(User.user_name.isnot(None))\
+            .filter(User.user_solved_count.isnot(None)).filter(User.user_rank.isnot(None)) \
+            .filter(User.user_id == db_user.user_id).first()
+        return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2],
+                "user_rank": my_page[3]}
 
 
 # 데이터 명세 7 - PUT 마이페이지(닉네임)

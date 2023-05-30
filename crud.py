@@ -1,5 +1,5 @@
 from passlib.context import CryptContext
-from models import UnsolvedProblem, Rank, User
+from models import UnsolvedProblem, Rank, User, Challengers
 import schemas
 from sqlalchemy.orm import Session
 from random import randint
@@ -8,43 +8,72 @@ from random import randint
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_unsolved_problems(db: Session, skip: int = 0, limit: int = 15):
+def is_user_challenged(db: Session, user_id: str, problem_num: int):
+    return True if db.query(Challengers).filter(Challengers.challenger_id == user_id,
+                                                Challengers.challenge_problem == problem_num).first() else False
+
+
+def make_problem_list(db, user_id, _problem_list):
+    problem_list = [{"problem_link": problem.problem_link, "problem_challengers": problem.problem_challengers,
+                     "problem_lev": problem.problem_lev, "problem_num": problem.problem_num,
+                     "problem_title": problem.problem_title,
+                     "is_user_challenged": is_user_challenged(db, user_id, problem.problem_num)}
+                    for problem in _problem_list]
+    return problem_list
+
+
+def read_unsolved_problems(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem)
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_lev(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_lev(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.asc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_lev_desc(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_lev_desc(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.desc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_challengers(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_challengers(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.asc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_challengers_desc(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_challengers_desc(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.desc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 

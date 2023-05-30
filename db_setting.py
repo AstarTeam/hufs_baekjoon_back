@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def db_setting(group_id):
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
@@ -31,13 +32,12 @@ def db_setting(group_id):
     
     # 그룹에서 24시간 안에 푼 문제 번호 저장
     cur.execute('CREATE TABLE IF NOT EXISTS problem_24hr(id int PRIMARY KEY)')
-    
-    #도전자 테이블 작성
+
+    # 도전자 테이블 작성
     cur.execute('''CREATE TABLE IF NOT EXISTS challengers(
                 id int PRIMARY KEY,
-                challenger_name text,
+                challenger_id text,
                 challenge_problem int,
-                FOREIGN KEY (challenger_name) REFERENCES user(user_name),
                 FOREIGN KEY (challenge_problem) REFERENCES unsolved_problem(problem_num))''')
     
     # 랭킹 관련 테이블

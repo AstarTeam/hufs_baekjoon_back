@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 import os
 import crud
-import schemas   # 라우터 함수 작성-> schemas 추가
+import schemas  # 라우터 함수 작성-> schemas 추가
 from crud import pwd_context
 from database import SessionLocal, get_db
 from models import UnsolvedProblem, User
@@ -23,6 +23,28 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 app = FastAPI()
 
 
+# 헤더 정보의 토큰값 읽어서 사용자 객체를 리턴
+def get_current_user(token: str = Depends(oauth2_scheme),
+                     db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="유효하지 않은 토큰입니다.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    else:
+        user = crud.read_user(db, user_id=user_id)
+        if user is None:
+            raise credentials_exception
+    return user
+
+
 @app.post("/unsolved_by_group/{group_id}")
 async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
     unsolved_problems = get_unsolved_by_group(group_id)
@@ -33,45 +55,116 @@ async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
     return {"message": "Unsolved problems saved successfully"}
 
 
-@app.get("/unsolved-by-HUFS")  # <- 괄호 안 url 문자열은 예시임
+# 데이터 명세 1.1 - GET 홈페이지 - 문제 리스트 기능(로그인 안 했을 때)
+@app.get("/unsolved-by-HUFS")
 async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, size: int = 15):  # 안 푼 문제 반환
-    total, _problem_list = crud.get_unsolved_problems(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_unsolved_problems(db, user_id=1234, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
     }
 
 
+# 데이터 명세 1.2 - GET 홈페이지 - 문제 리스트 기능(로그인 했을 때)
+@app.get("/unsolved-by-HUFS/token")
+async def get_unsolved_problems_token(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
+                                      page: int = 0, size: int = 15):  # 안 푼 문제 반환
+    total, _problem_list = crud.read_unsolved_problems(db, user_id=current_user.user_id, skip=page * size, limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+# 데이터 명세 2.1.1 - GET 홈페이지 - 문제 정렬 기능 - GET 쉬운 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-lev")
 async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_lev(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_lev(db, user_id=1234, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
     }
 
 
+# 데이터 명세 2.1.2 - GET 홈페이지 - 문제 정렬 기능 - GET 쉬운 순 정렬(로그인 했을 때)
+@app.get("/problem-list-ordered-by-lev/token")
+async def get_problem_list_ordered_by_lev_token(db: Session = Depends(get_db),
+                                                current_user: User = Depends(get_current_user),
+                                                page: int = 0, size: int = 15):
+    total, _problem_list = crud.read_problem_list_ordered_by_lev(db, user_id=current_user.user_id, skip=page * size,
+                                                                 limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+# 데이터 명세 2.2.1 - GET 홈페이지 - 문제 정렬 기능 - GET 어려운 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-lev-desc")
 async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, user_id=1234, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
     }
 
 
+# 데이터 명세 2.2.2 - GET 홈페이지 - 문제 정렬 기능 - GET 어려운 순 정렬(로그인 했을 때)
+@app.get("/problem-list-ordered-by-lev-desc/token")
+async def get_problem_list_ordered_by_lev_desc_token(db: Session = Depends(get_db),
+                                                     current_user: User = Depends(get_current_user), page: int = 0,
+                                                     size: int = 15):
+    total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, user_id=current_user.user_id,
+                                                                      skip=page * size, limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+# 데이터 명세 2.3.1 - GET 홈페이지 - 문제 정렬 기능 - GET 도전자 많은 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-challengers")
 async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, user_id=1234, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
     }
 
 
+# 데이터 명세 2.3.2 - GET 홈페이지 - 문제 정렬 기능 - GET 도전자 많은 순 정렬(로그인 했을 때)
+@app.get("/problem-list-ordered-by-challengers/token")
+async def get_problem_list_ordered_by_challengers_token(db: Session = Depends(get_db),
+                                                        current_user: User = Depends(get_current_user), page: int = 0,
+                                                        size: int = 15):
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, user_id=current_user.user_id,
+                                                                         skip=page * size, limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+# 데이터 명세 2.4.1 - GET 홈페이지 - 문제 정렬 기능 - 도전자 적은 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-challengers-desc")
-async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, skip=page * size, limit=size)
+async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get_db),
+                                                       current_user: User = Depends(get_current_user), page: int = 0,
+                                                       size: int = 15):
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, user_id=1234, skip=page * size,
+                                                                              limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+# 데이터 명세 2.4.2 - GET 홈페이지 - 문제 정렬 기능 - 도전자 적은 순 정렬(로그인 안 했을 때)
+@app.get("/problem-list-ordered-by-challengers-desc/token")
+async def get_problem_list_ordered_by_challengers_desc_token(db: Session = Depends(get_db),
+                                                             current_user: User = Depends(get_current_user),
+                                                             page: int = 0, size: int = 15):
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, user_id=current_user.user_id,
+                                                                              skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -126,7 +219,6 @@ def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db))
 @app.post("/login", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
                            db: Session = Depends(get_db)):
-
     # check user and password
     user = crud.read_user(db, form_data.username)
     if not user or not pwd_context.verify(form_data.password, user.user_pw):
@@ -152,28 +244,6 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
 
 
 # 데이터 명세 6.2 POST 로그아웃
-
-
-# 헤더 정보의 토큰값 읽어서 사용자 객체를 리턴
-def get_current_user(token: str = Depends(oauth2_scheme),
-                     db:Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="유효하지 않은 토큰입니다.",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    else:
-        user = crud.read_user(db, user_id=user_id)
-        if user is None:
-            raise credentials_exception
-    return user
 
 
 # 데이터 명세 7 - GET 마이페이지

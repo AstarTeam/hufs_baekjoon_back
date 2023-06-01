@@ -58,7 +58,7 @@ async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
 # 데이터 명세 1.1 - GET 홈페이지 - 문제 리스트 기능(로그인 안 했을 때)
 @app.get("/unsolved-by-HUFS")
 async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, size: int = 15):  # 안 푼 문제 반환
-    total, _problem_list = crud.read_unsolved_problems(db, user_id=1234, skip=page * size, limit=size)
+    total, _problem_list = crud.read_unsolved_problems(db, user_id=None, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -79,7 +79,7 @@ async def get_unsolved_problems_token(db: Session = Depends(get_db), current_use
 # 데이터 명세 2.1.1 - GET 홈페이지 - 문제 정렬 기능 - GET 쉬운 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-lev")
 async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_lev(db, user_id=1234, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_lev(db, user_id=None, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -102,7 +102,7 @@ async def get_problem_list_ordered_by_lev_token(db: Session = Depends(get_db),
 # 데이터 명세 2.2.1 - GET 홈페이지 - 문제 정렬 기능 - GET 어려운 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-lev-desc")
 async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, user_id=1234, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, user_id=None, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -125,7 +125,7 @@ async def get_problem_list_ordered_by_lev_desc_token(db: Session = Depends(get_d
 # 데이터 명세 2.3.1 - GET 홈페이지 - 문제 정렬 기능 - GET 도전자 많은 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-challengers")
 async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, user_id=1234, skip=page * size, limit=size)
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, user_id=None, skip=page * size, limit=size)
     return {
         "total": total,
         "problem_list": _problem_list
@@ -148,7 +148,7 @@ async def get_problem_list_ordered_by_challengers_token(db: Session = Depends(ge
 # 데이터 명세 2.4.1 - GET 홈페이지 - 문제 정렬 기능 - 도전자 적은 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-challengers-desc")
 async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
-    total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, user_id=1234, skip=page * size,
+    total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, user_id=None, skip=page * size,
                                                                               limit=size)
     return {
         "total": total,
@@ -327,8 +327,29 @@ async def post_my_page_auth(file: UploadFile, boj_id: str, current_user: User = 
     return {"message": "인증 신청이 완료되었습니다."}
 
 
+# 데이터 명세 11.1 - GET 홈페이지 - 검색(로그인 안 했을 때)
+@app.get("/search")
+async def get_search(problem_num: str, db: Session = Depends(get_db)):
+    search = crud.read_search(db, problem_num=problem_num, user_id=None)
+    if search:
+        return search
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="문제를 찾을 수 없습니다.")
+
+
+# 데이터 명세 11.2 = GET 홈페이지 - 검색(로그인 했을 때)
+@app.get("/search/token")
+async def get_search_token(problem_num: str, db: Session = Depends(get_db),
+                           current_user: User = Depends(get_current_user)):
+    search = crud.read_search(db, problem_num=problem_num, user_id=current_user.user_id)
+    if search:
+        return search
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="문제를 찾을 수 없습니다.")
+
+
 # 데이터 명세 12 - GET 추천 문제(로그인 안 했을 때)
 @app.get("/recommend")
 async def get_recommend(db: Session = Depends(get_db)):
-    recommend = crud.read_recommend(db, user_id=None)
+    recommend = crud.read_recommend(db)
     return recommend

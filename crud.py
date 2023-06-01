@@ -24,10 +24,9 @@ def make_problem_list(db, user_id, _problem_list):
 def read_unsolved_problems(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem)
 
-    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
-    if is_user_challenge:
+    if user_id:
         problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
@@ -35,10 +34,9 @@ def read_unsolved_problems(db: Session, user_id: str, skip: int = 0, limit: int 
 def read_problem_list_ordered_by_lev(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.asc())
 
-    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
-    if is_user_challenge:
+    if user_id:
         problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
@@ -46,10 +44,9 @@ def read_problem_list_ordered_by_lev(db: Session, user_id: str, skip: int = 0, l
 def read_problem_list_ordered_by_lev_desc(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.desc())
 
-    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
-    if is_user_challenge:
+    if user_id:
         problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
@@ -57,10 +54,9 @@ def read_problem_list_ordered_by_lev_desc(db: Session, user_id: str, skip: int =
 def read_problem_list_ordered_by_challengers(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.asc())
 
-    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
-    if is_user_challenge:
+    if user_id:
         problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
@@ -68,10 +64,9 @@ def read_problem_list_ordered_by_challengers(db: Session, user_id: str, skip: in
 def read_problem_list_ordered_by_challengers_desc(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.desc())
 
-    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
-    if is_user_challenge:
+    if user_id:
         problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
@@ -191,12 +186,37 @@ def update_my_page_auth(db: Session, db_user: User, boj_id: str):
     db.commit()
 
 
+# 데이터 명세 11.2 - GET 홈페이지 - 검색(로그인 했을 때)
+def read_search(db: Session, user_id: str, problem_num: str):
+    result = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
+    if result:
+        if user_id:
+            return make_problem_list(db, user_id, {result})
+        else:
+            return result
+
+
 # 데이터 명세 12 - GET 추천 문제
-def read_recommend(db: Session, user_id: str):
-    while True:
+def read_recommend(db: Session):
+    bronze, silver, gold, platinum, diamond, ruby = False, False, False, False, False, False
+    problems = []
+    while (bronze, silver, gold, platinum, diamond, ruby) != (True, True, True, True, True, True):
         num = randint(1000, 30000)
         result = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == num).first()
-        if result is not None:
-            if db.query(Challengers).filter(Challengers.challenger_id == user_id).all():
-                result = make_problem_list(db, user_id, result)
-            return result
+        if result:
+            if 1 <= result.problem_lev <= 5 and not bronze:
+                bronze = True
+            elif 6 <= result.problem_lev <= 10 and not silver:
+                silver = True
+            elif 11 <= result.problem_lev <= 15 and not gold:
+                gold = True
+            elif 16 <= result.problem_lev <= 20 and not platinum:
+                platinum = True
+            elif 21 <= result.problem_lev <= 25 and not diamond:
+                diamond = True
+            elif 26 <= result.problem_lev <= 30 and not ruby:
+                ruby = True
+            else:
+                continue
+            problems.append(result)
+    return problems

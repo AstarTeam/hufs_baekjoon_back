@@ -4,7 +4,6 @@ import schemas
 from sqlalchemy.orm import Session
 from random import randint
 
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -77,6 +76,28 @@ def read_problem_list_ordered_by_challengers_desc(db: Session, user_id: str, ski
     return total, problem_list
 
 
+# 데이터 명세 2.5 - GET 홈페이지 - 문제 정렬 기능 - 도전 중인 문제
+def read_problem_list_challenging(db: Session, user_id: str, skip: int = 0, limit: int = 15):
+    _problem_list = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num
+                                                     .in_(db.query(Challengers.challenge_problem)
+                                                          .filter(Challengers.challenger_id == user_id)))
+    total = _problem_list.count()
+    problem_list = _problem_list.offset(skip).limit(limit).all()
+    problem_list = make_problem_list(db, user_id, problem_list)
+    return total, problem_list
+
+
+# 데이터 명세 2.6 - GET 홈페이지 - 문제 정렬 기능 - 안 푼 문제
+def read_problem_list_not_challenged(db: Session, user_id: str, skip: int = 0, limit: int = 15):
+    _problem_list = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num
+                                                     .notin_(db.query(Challengers.challenge_problem)
+                                                             .filter(Challengers.challenger_id == user_id)))
+    total = _problem_list.count()
+    problem_list = _problem_list.offset(skip).limit(limit).all()
+    problem_list = make_problem_list(db, user_id, problem_list)
+    return total, problem_list
+
+
 def read_ranking_info(db: Session):
     ranking_info = db.query(Rank).all()
     return ranking_info
@@ -89,7 +110,7 @@ def read_user_info(db: Session):
 
 # 데이터 명세 4 - GET 홈페이지 - 명예의 전당
 def read_fame(db: Session, limit: int = 10):
-    result = db.query(User.user_name, User.user_solved_count).filter(User.user_name.isnot(None))\
+    result = db.query(User.user_name, User.user_solved_count).filter(User.user_name.isnot(None)) \
         .filter(User.user_solved_count.isnot(None)).order_by(User.user_solved_count.desc()).limit(limit).all()
     return [{"name": user_id, "count": user_solved_count} for user_id, user_solved_count in result]
 
@@ -119,15 +140,15 @@ def read_user_by_name(db: Session, user_name: str):
 def read_my_page(db: Session, db_user: User):
     if db_user.user_auth == 1:
         my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank,
-                           User.user_baekjoon_id).filter(User.user_id.isnot(None))\
-            .filter(User.user_name.isnot(None)).filter(User.user_solved_count.isnot(None))\
-            .filter(User.user_rank.isnot(None)).filter(User.user_baekjoon_id.isnot(None))\
+                           User.user_baekjoon_id).filter(User.user_id.isnot(None)) \
+            .filter(User.user_name.isnot(None)).filter(User.user_solved_count.isnot(None)) \
+            .filter(User.user_rank.isnot(None)).filter(User.user_baekjoon_id.isnot(None)) \
             .filter(User.user_id == db_user.user_id).first()
         return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2],
                 "user_rank": my_page[3], "user_baekjoon_id": my_page[4]}
     else:
-        my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank)\
-            .filter(User.user_id.isnot(None)).filter(User.user_name.isnot(None))\
+        my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank) \
+            .filter(User.user_id.isnot(None)).filter(User.user_name.isnot(None)) \
             .filter(User.user_solved_count.isnot(None)).filter(User.user_rank.isnot(None)) \
             .filter(User.user_id == db_user.user_id).first()
         return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2],

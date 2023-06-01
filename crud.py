@@ -1,49 +1,100 @@
 from passlib.context import CryptContext
-from models import UnsolvedProblem, Rank, User
-import schemas  # 데이터 명세 5 - 회원가입
+from models import UnsolvedProblem, Rank, User, Challengers
+import schemas
 from sqlalchemy.orm import Session
-
+from random import randint
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_unsolved_problems(db: Session, skip: int = 0, limit: int = 15):
+def is_user_challenged(db: Session, user_id: str, problem_num: int):
+    return True if db.query(Challengers).filter(Challengers.challenger_id == user_id,
+                                                Challengers.challenge_problem == problem_num).first() else False
+
+
+def make_problem_list(db, user_id, _problem_list):
+    problem_list = [{"problem_link": problem.problem_link, "problem_challengers": problem.problem_challengers,
+                     "problem_lev": problem.problem_lev, "problem_num": problem.problem_num,
+                     "problem_title": problem.problem_title,
+                     "is_user_challenged": is_user_challenged(db, user_id, problem.problem_num)}
+                    for problem in _problem_list]
+    return problem_list
+
+
+def read_unsolved_problems(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem)
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_lev(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_lev(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.asc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_lev_desc(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_lev_desc(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_lev.desc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_challengers(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_challengers(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.asc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
-def read_problem_list_ordered_by_challengers_desc(db: Session, skip: int = 0, limit: int = 15):
+def read_problem_list_ordered_by_challengers_desc(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).order_by(UnsolvedProblem.problem_challengers.desc())
 
+    is_user_challenge = True if db.query(Challengers).filter(Challengers.challenger_id == user_id).all() else False
     total = _problem_list.count()
     problem_list = _problem_list.offset(skip).limit(limit).all()
+    if is_user_challenge:
+        problem_list = make_problem_list(db, user_id, problem_list)
+    return total, problem_list
+
+
+# 데이터 명세 2.5 - GET 홈페이지 - 문제 정렬 기능 - 도전 중인 문제
+def read_problem_list_challenging(db: Session, user_id: str, skip: int = 0, limit: int = 15):
+    _problem_list = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num
+                                                     .in_(db.query(Challengers.challenge_problem)
+                                                          .filter(Challengers.challenger_id == user_id)))
+    total = _problem_list.count()
+    problem_list = _problem_list.offset(skip).limit(limit).all()
+    problem_list = make_problem_list(db, user_id, problem_list)
+    return total, problem_list
+
+
+# 데이터 명세 2.6 - GET 홈페이지 - 문제 정렬 기능 - 안 푼 문제
+def read_problem_list_not_challenged(db: Session, user_id: str, skip: int = 0, limit: int = 15):
+    _problem_list = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num
+                                                     .notin_(db.query(Challengers.challenge_problem)
+                                                             .filter(Challengers.challenger_id == user_id)))
+    total = _problem_list.count()
+    problem_list = _problem_list.offset(skip).limit(limit).all()
+    problem_list = make_problem_list(db, user_id, problem_list)
     return total, problem_list
 
 
@@ -59,15 +110,16 @@ def read_user_info(db: Session):
 
 # 데이터 명세 4 - GET 홈페이지 - 명예의 전당
 def read_fame(db: Session, limit: int = 10):
-    result = db.query(User.user_name, User.user_solved_count).filter(User.user_name.isnot(None))\
+    result = db.query(User.user_name, User.user_solved_count).filter(User.user_name.isnot(None)) \
         .filter(User.user_solved_count.isnot(None)).order_by(User.user_solved_count.desc()).limit(limit).all()
-    return {user_id: user_solved_count for user_id, user_solved_count in result}
+    return [{"name": user_id, "count": user_solved_count} for user_id, user_solved_count in result]
 
 
 # 데이터 명세 5 - POST 회원가입(작성중)
 def create_user(db: Session, user_create=schemas.UserCreate):
+    rand = randint(100000, 999999)
     db_user = User(user_id=user_create.user_id, user_pw=pwd_context.hash(user_create.user_pw),
-                   user_name=user_create.user_name)
+                   user_name=user_create.user_name, user_solved_count=0, user_auth=0, user_rand=rand)
     db.add(db_user)
     db.commit()
 
@@ -76,8 +128,8 @@ def read_user(db: Session, user_id: str):
     return db.query(User).filter(User.user_id == user_id).first()
 
 
-def read_user_by_id(db: Session, user_id: schemas.UserCheckId):
-    return db.query(User).filter(User.user_id == user_id.user_id).first()
+def read_user_by_id(db: Session, user_id: str):
+    return db.query(User).filter(User.user_id == user_id).first()
 
 
 def read_user_by_name(db: Session, user_name: str):
@@ -85,22 +137,55 @@ def read_user_by_name(db: Session, user_name: str):
 
 
 # 데이터 명세 7 - GET 마이페이지
-def read_my_page(db: Session):
-    my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank).all()
-    return my_page
+def read_my_page(db: Session, db_user: User):
+    if db_user.user_auth == 1:
+        my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank,
+                           User.user_baekjoon_id).filter(User.user_id.isnot(None)) \
+            .filter(User.user_name.isnot(None)).filter(User.user_solved_count.isnot(None)) \
+            .filter(User.user_rank.isnot(None)).filter(User.user_baekjoon_id.isnot(None)) \
+            .filter(User.user_id == db_user.user_id).first()
+        return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2],
+                "user_rank": my_page[3], "user_baekjoon_id": my_page[4]}
+    else:
+        my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank) \
+            .filter(User.user_id.isnot(None)).filter(User.user_name.isnot(None)) \
+            .filter(User.user_solved_count.isnot(None)).filter(User.user_rank.isnot(None)) \
+            .filter(User.user_id == db_user.user_id).first()
+        return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2],
+                "user_rank": my_page[3]}
 
 
-# 데이터 명세 7 - PUT 마이페이지(닉네임)
-# 만약 name이나 pw 중 하나만 바꾼다면, 나머지 하나는 None이 되어버리기 때문에 프론트에서 기존의 값을 넣어줘야 함
-    # name만 바꾼다면, name은 변경 값을 보내고, pw는 기존의 pw를 그대로 보내줘야함
-def update_my_page_name(db: Session, db_user: User, user_update: schemas.UserUpdateName):
-    db_user.user_name = user_update.user_name
+# 데이터 명세 8.1 - PUT 마이페이지(닉네임)
+def update_my_page_name(db: Session, db_user: User, user_update: str):
+    db_user.user_name = user_update
     db.add(db_user)
     db.commit()
 
 
-# 데이터 명세 7 - PUT 마이페이지(비밀번호)
-def update_my_page_pw(db: Session, db_user: User, user_update: schemas.UserUpdatePw):
-    db_user.user_pw = pwd_context.hash(user_update.user_pw)
+# 데이터 명세 8.2 - PUT 마이페이지(비밀번호)
+def update_my_page_pw(db: Session, db_user: User, user_update: str):
+    db_user.user_pw = pwd_context.hash(user_update)
+    db.add(db_user)
+    db.commit()
+
+
+# 데이터 명세 8.3 - DELETE 마이페이지
+def delete_my_page(db: Session, db_user: User):
+    _user = db.query(Challengers).filter(Challengers.challenger_id == db_user.user_id).all()
+    for user in _user:
+        db.delete(user)
+    db.delete(db_user)
+    db.commit()
+
+
+# 데이터 명세 9 - GET 백준 인증 - 난수 받기
+def read_random_number(db: Session, user_id: str):
+    result = db.query(User.user_rand).filter(User.user_rand.isnot(None)).filter(User.user_id == user_id).first()
+    return {"rand": user_rand for user_rand in result}
+
+
+def update_my_page_auth(db: Session, db_user: User, boj_id: str):
+    db_user.user_auth = 2
+    db_user.user_boj_id = boj_id
     db.add(db_user)
     db.commit()

@@ -271,8 +271,8 @@ def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_probl
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
 
-    cur.execute("INSERT OR IGNORE INTO user_solved_count(id) VALUES(?)", (user,))
-    cur.execute("SELECT count FROM user_solved_count WHERE id = ?", (user,))
+    #cur.execute("INSERT OR IGNORE INTO user(user_baekjoon_id) VALUES(?)", (user,))
+    cur.execute("SELECT user_solved_count FROM user WHERE name = ?", (user,))
     row = cur.fetchone()
     prev_solved_count = row[0]
     conn.commit()
@@ -285,8 +285,27 @@ def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_probl
 
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
-    cur.execute("UPDATE user_solved_count SET count = ? WHERE id = ?", (total_count, user))
+    cur.execute("UPDATE user SET user_solved_count = ? WHERE name = ?", (total_count, user))
     conn.commit()
+    cur.close()
+    conn.close()   
+    return
+
+def update_user_rank(group_id):
+    """
+    해당 그룹의 모든 유저들의 누적 푼 문제수 비교하여 랭크 업데이트
+    :param int group_id: 그룹 아이디
+    """
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
+    
+    cur.execute("SELECT * FROM user")
+    cur.execute("SELECT name, RANK() OVER(ORDER BY user_solved_count DESC) rank FROM user")
+    rows = cur.fetchall()
+    for row in rows:
+        cur.execute("UPDATE user SET user_rank = ? WHERE name = ?", (row[1], row[0]))
+        conn.commit()
+                    
     cur.close()
     conn.close()   
     return
@@ -296,3 +315,4 @@ db_setting(group_id)
 unsolved_problems = get_unsolved_by_group(group_id)
 print(unsolved_problems)
 print(len(unsolved_problems))
+update_user_rank(group_id)

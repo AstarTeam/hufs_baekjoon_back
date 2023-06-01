@@ -16,7 +16,7 @@ class UnsolvedProblem(Base):
 class Challenger(Base):
     __tablename__ = "challengers"
     id = Column(Integer,primary_key=True)
-    challenger_name = Column(String(255), ForeignKey("user.user_name"))
+    challenger_name = Column(String(255), ForeignKey("user.user_id"))
     challenge_problem = Column(Integer, ForeignKey("unsolved_problem.problem_num"))
     user = relationship("User", backref="challenging")
     problem = relationship("UnsolvedProblem", backref="challengers")
@@ -44,4 +44,13 @@ class User(Base):
     user_solved_count = Column(Integer, nullable=True)   # 회원의 누적 푼 문제 수
     user_baekjoon_id = Column(String(255), nullable=True)
     user_rank = Column(Integer, nullable=True)   # 회원의 등수
+    user_rand = Column(Integer, nullable=True)   # 회원의 난수값
     user_auth = Column(Integer, nullable=True)   # 회원의 인증 여부 (0: 미인증, 1: 인증됨, 2: 심사중)
+
+
+class Challengers(Base):
+    __tablename__ = "challengers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    challenger_id = Column(String(255))
+    challenge_problem = Column(Integer, ForeignKey("unsolved_problem.problem_num"))

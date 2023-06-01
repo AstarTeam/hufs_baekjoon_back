@@ -171,6 +171,30 @@ async def get_problem_list_ordered_by_challengers_desc_token(db: Session = Depen
     }
 
 
+# 데이터 명세 2.5 - GET 홈페이지 - 문제 정렬 기능 - 도전 중인 문제
+@app.get("/problem-list-challenging")
+async def get_problem_list_challenging(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
+                                       page: int = 0, size: int = 15):
+    total, _problem_list = crud.read_problem_list_challenging(db, user_id=current_user.user_id, skip=page * size,
+                                                              limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
+# 데이터 명세 2.6 - GET 홈페이지 - 문제 정렬 기능 - 안 푼 문제
+@app.get("/problem-list-not-challenged")
+async def get_problem_list_not_challenged(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
+                                          page: int = 0, size: int = 15):
+    total, _problem_list = crud.read_problem_list_not_challenged(db, user_id=current_user.user_id, skip=page * size,
+                                                                 limit=size)
+    return {
+        "total": total,
+        "problem_list": _problem_list
+    }
+
+
 @app.get("/ranking-info")
 async def get_ranking_info(db: Session = Depends(get_db)):
     ranking_info = crud.read_ranking_info(db)

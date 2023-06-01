@@ -297,6 +297,14 @@ async def update_my_page_password(_update_pw: str, db: Session = Depends(get_db)
     return {"message": "비밀번호가 변경되었습니다."}
 
 
+# 데이터 명세 8.3 - DELETE 마이페이지
+@app.delete("/my-page/delete")
+async def delete_my_page(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_user = crud.read_user(db, user_id=current_user.user_id)
+    crud.delete_my_page(db=db, db_user=db_user)
+    return {"message": "회원탈퇴가 완료되었습니다."}
+
+
 # 데이터 명세 9 - GET 백준 인증 - 난수 받기
 @app.get("/my-page/rand/{user_id}")
 async def get_my_page_rand(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

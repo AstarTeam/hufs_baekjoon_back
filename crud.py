@@ -155,21 +155,30 @@ def read_my_page(db: Session, db_user: User):
                 "user_rank": my_page[3]}
 
 
-# 데이터 명세 7 - PUT 마이페이지(닉네임)
+# 데이터 명세 8.1 - PUT 마이페이지(닉네임)
 def update_my_page_name(db: Session, db_user: User, user_update: str):
     db_user.user_name = user_update
     db.add(db_user)
     db.commit()
 
 
-# 데이터 명세 7 - PUT 마이페이지(비밀번호)
+# 데이터 명세 8.2 - PUT 마이페이지(비밀번호)
 def update_my_page_pw(db: Session, db_user: User, user_update: str):
     db_user.user_pw = pwd_context.hash(user_update)
     db.add(db_user)
     db.commit()
 
 
-# 데이터 명세 8 - GET 백준 인증 - 난수 받기
+# 데이터 명세 8.3 - DELETE 마이페이지
+def delete_my_page(db: Session, db_user: User):
+    _user = db.query(Challengers).filter(Challengers.challenger_id == db_user.user_id).all()
+    for user in _user:
+        db.delete(user)
+    db.delete(db_user)
+    db.commit()
+
+
+# 데이터 명세 9 - GET 백준 인증 - 난수 받기
 def read_random_number(db: Session, user_id: str):
     result = db.query(User.user_rand).filter(User.user_rand.isnot(None)).filter(User.user_id == user_id).first()
     return {"rand": user_rand for user_rand in result}

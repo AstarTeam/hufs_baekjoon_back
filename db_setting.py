@@ -16,8 +16,10 @@ def db_setting(group_id):
                 user_pw text, 
                 user_name text, 
                 user_solved_count int default 0, 
-                user_baekjoon_id text, 
-                user_rank int)''')
+                user_baekjoon_id text,
+                user_rank int, 
+                user_auth int,
+                user_rand int)''')
     
     # 그룹에서 푼 모든 문제 번호 저장
     cur.execute('CREATE TABLE IF NOT EXISTS problem(id int PRIMARY KEY)')

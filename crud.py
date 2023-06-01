@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 from models import UnsolvedProblem, Rank, User, Challengers
-import schemas
+import schemas, unsolved_problem_project
 from sqlalchemy.orm import Session
 from random import randint
 
@@ -122,6 +122,7 @@ def create_user(db: Session, user_create=schemas.UserCreate):
                    user_name=user_create.user_name, user_solved_count=0, user_auth=0, user_rand=rand)
     db.add(db_user)
     db.commit()
+    unsolved_problem_project.update_user_rank(405)
 
 
 def read_user(db: Session, user_id: str):
@@ -138,6 +139,7 @@ def read_user_by_name(db: Session, user_name: str):
 
 # 데이터 명세 7 - GET 마이페이지
 def read_my_page(db: Session, db_user: User):
+    unsolved_problem_project.update_user_rank(405)
     if db_user.user_auth == 1:
         my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank,
                            User.user_baekjoon_id).filter(User.user_id.isnot(None)) \
@@ -149,10 +151,8 @@ def read_my_page(db: Session, db_user: User):
     else:
         my_page = db.query(User.user_id, User.user_name, User.user_solved_count, User.user_rank) \
             .filter(User.user_id.isnot(None)).filter(User.user_name.isnot(None)) \
-            .filter(User.user_solved_count.isnot(None)).filter(User.user_rank.isnot(None)) \
-            .filter(User.user_id == db_user.user_id).first()
-        return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2],
-                "user_rank": my_page[3]}
+            .filter(User.user_solved_count.isnot(None)).filter(User.user_id == db_user.user_id).first()
+        return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2]}
 
 
 # 데이터 명세 8.1 - PUT 마이페이지(닉네임)
@@ -189,3 +189,14 @@ def update_my_page_auth(db: Session, db_user: User, boj_id: str):
     db_user.user_boj_id = boj_id
     db.add(db_user)
     db.commit()
+
+
+# 데이터 명세 12 - GET 추천 문제
+def read_recommend(db: Session, user_id: str):
+    while True:
+        num = randint(1000, 30000)
+        result = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == num).first()
+        if result is not None:
+            if db.query(Challengers).filter(Challengers.challenger_id == user_id).all():
+                result = make_problem_list(db, user_id, result)
+            return result

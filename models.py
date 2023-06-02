@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -48,6 +48,7 @@ class Challengers(Base):
     challenge_problem = Column(Integer, ForeignKey("unsolved_problem.problem_num"))
     user = relationship("User", backref="challenging")
     problem = relationship("UnsolvedProblem", backref="challengers")
+
 
 class Recommend(Base):
     __tablename__ = "recommend"

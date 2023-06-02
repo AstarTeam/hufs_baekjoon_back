@@ -52,7 +52,7 @@ def db_setting(group_id):
                 low_rank_name text not null, 
                 low_rank_now_solved int not null, 
                 low_rank_pre_solved int)''')
-    #추천 문제 테이블
+    # 추천 문제 테이블
     cur.execute('''CREATE TABLE IF NOT EXISTS recommend(
                 id int PRIMARY KEY,
                 problem_num int not null,

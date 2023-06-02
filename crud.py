@@ -218,5 +218,6 @@ def read_recommend(db: Session):
                 ruby = True
             else:
                 continue
-            problems.append(result)
+            problems.append({"problem_num": result.problem_num, "problem_title": result.problem_title,
+                             "problem_lev": result.problem_lev, "problem_link": result.problem_link})
     return problems

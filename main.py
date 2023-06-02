@@ -13,7 +13,7 @@ import crud
 import schemas  # 라우터 함수 작성-> schemas 추가
 from crud import pwd_context
 from database import SessionLocal, get_db
-from models import UnsolvedProblem, User
+from models import UnsolvedProblem, User, Challenger
 from unsolved_problem_project import get_unsolved_by_group
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -362,6 +362,24 @@ async def get_recommend(db: Session = Depends(get_db)):
 def update_recommend():
     crud.update_recommend()
 
+#도전자 수 count
+@app.post("/problem/{problem_num}/{user_id}/challenge")
+def challenge_problem(problem_num: int, user_id: str, db: Session = Depends(get_db)):
+    new_challenge = Challenger(challenger_id=user_id, challenge_problem=problem_num)
+    db.add(new_challenge)
+    problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
+    problem.problem_challengers += 1
+    db.commit()
+
+@app.post("/problem/{problem_num}/{user_id}/unchallenge")
+def unchallenge_problem(problem_num: int, user_id: str, db: Session = Depends(get_db)):
+    unchallenge = db.query(Challenger).filter(
+        Challenger.challenge_problem == problem_num,
+        Challenger.challenger_id == user_id).first()
+    db.delete(unchallenge)
+    problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
+    problem.problem_challengers -= 1
+    db.commit()
 
 # 12시 정각마다 업데이트 => 배포시 주석 해제
 # scheduler = BackgroundScheduler()

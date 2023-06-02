@@ -38,8 +38,9 @@ def db_setting(group_id):
                 id int PRIMARY KEY,
                 challenger_id text,
                 challenge_problem int,
+                FOREIGN KEY (challenger_id) REFERENCES user(user_id),
                 FOREIGN KEY (challenge_problem) REFERENCES unsolved_problem(problem_num))''')
-    
+
     # 랭킹 관련 테이블
     cur.execute('''CREATE TABLE IF NOT EXISTS rank(
                 hufs_rank int PRIMARY KEY, 
@@ -51,6 +52,13 @@ def db_setting(group_id):
                 low_rank_name text not null, 
                 low_rank_now_solved int not null, 
                 low_rank_pre_solved int)''')
+    #추천 문제 테이블
+    cur.execute('''CREATE TABLE IF NOT EXISTS recommend(
+                id int PRIMARY KEY,
+                problem_num int not null,
+                problem_title text not null,
+                problem_lev int not null,
+                problem_link text not null)''')
 
     conn.commit()
     cur.close()

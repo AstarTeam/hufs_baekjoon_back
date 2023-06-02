@@ -47,3 +47,13 @@ class Challengers(Base):
     id = Column(Integer, primary_key=True, index=True)
     challenger_id = Column(String(255))
     challenge_problem = Column(Integer, ForeignKey("unsolved_problem.problem_num"))
+
+
+class Recommend(Base):
+    __tablename__ = "recommend"
+
+    id = Column(String(255), primary_key=True, index=True)
+    problem_num = Column(Integer, nullable=True)
+    problem_title = Column(String(255), nullable=True)
+    problem_lev = Column(Integer, nullable=True)
+    problem_link = Column(String(255), nullable=True)

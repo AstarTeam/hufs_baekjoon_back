@@ -1,6 +1,11 @@
-import schedule
 import time
+
+import schedule
+
 import unsolved_problem_project
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 # db 업데이트 하는 함수
 def update_db():
@@ -10,10 +15,14 @@ def update_db():
     print(len(unsolved_problems))
     unsolved_problem_project.update_user_rank(group_id)
 
-# 매일 08:00마다 update_db 함수 작동
-schedule.every(24).day.at("08:00").do(update_db)
 
-# 무한 루프 돌면서 스케줄 유지
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+# 08시 정각마다 업데이트 => 배포시 주석 해제
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(update_db, 'cron', hour=8)
+# scheduler.start()
+
+
+# 5초마다 업데이트 하는 테스트용
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(update_db, 'interval', seconds=5)
+# scheduler.start()

@@ -1,4 +1,5 @@
-import uuid
+import asyncio
+import uvicorn
 from datetime import timedelta, datetime
 
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
@@ -14,6 +15,9 @@ from crud import pwd_context
 from database import SessionLocal, get_db
 from models import UnsolvedProblem, User
 from unsolved_problem_project import get_unsolved_by_group
+
+from apscheduler.schedulers.background import BackgroundScheduler
+import datetime
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 SECRET_KEY = "4ab2fce7a6bd79e1c014396315ed322dd6edb1c5d975c6b74a2904135172c03c"
@@ -353,3 +357,19 @@ async def get_search_token(problem_num: str, db: Session = Depends(get_db),
 async def get_recommend(db: Session = Depends(get_db)):
     recommend = crud.read_recommend(db)
     return recommend
+
+
+def update_recommend():
+    crud.update_recommend()
+
+
+# 12시 정각마다 업데이트 => 배포시 주석 해제
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(update_recommend, 'cron', hour=0)
+# scheduler.start()
+
+
+# 5초마다 업데이트 하는 테스트용
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(update_recommend, 'interval', seconds=5)
+# scheduler.start()

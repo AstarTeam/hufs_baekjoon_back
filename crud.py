@@ -1,8 +1,12 @@
-from passlib.context import CryptContext
-from models import UnsolvedProblem, Rank, User, Challengers
-import schemas, unsolved_problem_project
-from sqlalchemy.orm import Session
 from random import randint
+
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+import schemas
+import unsolved_problem_project
+from database import SessionLocal
+from models import UnsolvedProblem, Rank, User, Challengers, Recommend
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -196,28 +200,43 @@ def read_search(db: Session, user_id: str, problem_num: str):
             return result
 
 
-# 데이터 명세 12 - GET 추천 문제
-def read_recommend(db: Session):
+def update_recommend():
+    db = SessionLocal()
     bronze, silver, gold, platinum, diamond, ruby = False, False, False, False, False, False
-    problems = []
     while (bronze, silver, gold, platinum, diamond, ruby) != (True, True, True, True, True, True):
         num = randint(1000, 30000)
         result = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == num).first()
+        flag = None
         if result:
             if 1 <= result.problem_lev <= 5 and not bronze:
                 bronze = True
+                flag = "bronze"
             elif 6 <= result.problem_lev <= 10 and not silver:
                 silver = True
+                flag = "silver"
             elif 11 <= result.problem_lev <= 15 and not gold:
                 gold = True
+                flag = "gold"
             elif 16 <= result.problem_lev <= 20 and not platinum:
                 platinum = True
+                flag = "platinum"
             elif 21 <= result.problem_lev <= 25 and not diamond:
                 diamond = True
+                flag = "diamond"
             elif 26 <= result.problem_lev <= 30 and not ruby:
                 ruby = True
+                flag = "ruby"
             else:
                 continue
-            problems.append({"problem_num": result.problem_num, "problem_title": result.problem_title,
-                             "problem_lev": result.problem_lev, "problem_link": result.problem_link})
-    return problems
+            _db_update = db.query(Recommend).filter(Recommend.id == flag).first()
+            _db_update.problem_num, _db_update.problem_title, _db_update.problem_lev, _db_update.problem_link = \
+                result.problem_num, result.problem_title, result.problem_lev, result.problem_link
+            db.add(_db_update)
+            db.commit()
+    db.close()
+
+
+# 데이터 명세 12 - GET 추천 문제 가져오기
+def read_recommend(db: Session):
+    result = db.query(Recommend).all()
+    return result

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -41,13 +41,14 @@ class User(Base):
     user_auth = Column(Integer, nullable=True)   # 회원의 인증 여부 (0: 미인증, 1: 인증됨, 2: 심사중)
 
 
-class Challenger(Base):
+class Challengers(Base):
     __tablename__ = "challengers"
     id = Column(Integer,primary_key=True)
     challenger_id = Column(String(255), ForeignKey("user.user_id"))
     challenge_problem = Column(Integer, ForeignKey("unsolved_problem.problem_num"))
     user = relationship("User", backref="challenging")
     problem = relationship("UnsolvedProblem", backref="challengers")
+
 
 class Recommend(Base):
     __tablename__ = "recommend"

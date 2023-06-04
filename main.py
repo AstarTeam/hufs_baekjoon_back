@@ -368,6 +368,7 @@ def challenge_problem(problem_num: int, user_id: str, db: Session = Depends(get_
     problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
     problem.problem_challengers += 1
     db.commit()
+    return {"message": "도전자 +."}
 
 
 @app.post("/problem/{problem_num}/{user_id}/unchallenge")
@@ -379,6 +380,7 @@ def unchallenge_problem(problem_num: int, user_id: str, db: Session = Depends(ge
     problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
     problem.problem_challengers -= 1
     db.commit()
+    return {"message": "도전자 -."}
 
 
 # 12시 정각마다 업데이트 => 배포시 주석 해제

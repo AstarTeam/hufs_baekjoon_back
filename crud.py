@@ -11,7 +11,7 @@ from models import UnsolvedProblem, Rank, User, Challengers, Recommend
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def is_user_challenged(db: Session, user_id: str, problem_num: int):
+def is_user_challenged(db, user_id: str, problem_num: int):
     return True if db.query(Challengers).filter(Challengers.challenger_id == user_id,
                                                 Challengers.challenge_problem == problem_num).first() else False
 

@@ -43,11 +43,9 @@ class User(Base):
 
 class Challengers(Base):
     __tablename__ = "challengers"
-    id = Column(Integer,primary_key=True)
-    challenger_id = Column(String(255), ForeignKey("user.user_id"))
-    challenge_problem = Column(Integer, ForeignKey("unsolved_problem.problem_num"))
-    user = relationship("User", backref="challenging")
-    problem = relationship("UnsolvedProblem", backref="challengers")
+
+    challenger_id = Column(String(255), primary_key=True)
+    challenge_problem = Column(Integer, nullable=True)
 
 
 class Recommend(Base):

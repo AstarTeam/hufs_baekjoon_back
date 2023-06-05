@@ -375,7 +375,7 @@ def challenge_problem(problem_num: int, current_user: User = Depends(get_current
     challenger = db.query(Challengers).filter(
         Challengers.challenge_problem == problem_num,
         Challengers.challenger_id == current_user.user_id).first()
-    if challenger != None:
+    if challenger == None:
         new_challenge = Challengers(challenger_id=current_user.user_id, challenge_problem=problem_num)
         db.add(new_challenge)
         problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()

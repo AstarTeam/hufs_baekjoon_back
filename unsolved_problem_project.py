@@ -2,7 +2,10 @@ import json
 from time import sleep
 import requests
 import sqlite3
+import os
 from db_setting import db_setting
+
+is_interrupted = False
 
 def check_user(user_id, is_checking_count):
     """
@@ -25,21 +28,22 @@ def check_user(user_id, is_checking_count):
         pages = (count - 1) // 50 + 1
 
         # user 테이블에 user_id에 대한 항목 있는지 확인
-        cur.execute("SELECT solved FROM baekjoon_user WHERE id = ?", (user_id,))
+        cur.execute("SELECT solved_count FROM baekjoon_user WHERE id = ?", (user_id,))
         user_solved = cur.fetchone()
         if user_solved is None:         # 없으면 새로운 행 (아이디, 푼 문제 수) 추가
-            cur.execute("INSERT INTO baekjoon_user (id, solved) VALUES (?, ?)", (user_id, count))
+            cur.execute("INSERT INTO baekjoon_user (id, solved_count) VALUES (?, ?)", (user_id, count))
         elif user_solved[0] == count:   # 문제 수 변경되지 않았으면 더이상 검색 X
             if not is_checking_count:   # 랭킹에 푼 문제 수 갱신하는 경우면 아래 실행 X
                 pages = -1
-        elif user_solved[0] != count:   # 문제 수 변경되었으면 solved 업데이트
-            cur.execute("UPDATE baekjoon_user SET solved = ? WHERE id = ?", (count, user_id))
+        elif user_solved[0] != count:   # 문제 수 변경되었으면 solved_count 업데이트
+            cur.execute("UPDATE baekjoon_user SET solved_count = ? WHERE id = ?", (count, user_id))
         conn.commit()
         cur.close()
         conn.close()
     else:
         print("check_user 요청 실패")
         print(r_solved_by_user.status_code)
+        is_interrupted = True
     return pages, items
 
 def get_solved(user_id, pages, items):
@@ -66,6 +70,15 @@ def get_solved(user_id, pages, items):
             print("get_solved 요청 실패")
             print(r_solved_in_page.status_code)
             print(url)
+            is_interrupted = True
+
+    problems_str = json.dumps(solved_problems)
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
+    cur.execute("UPDATE baekjoon_user SET solved_list = ? WHERE id = ?", (problems_str, user_id))
+    conn.commit()
+    cur.close()
+    conn.close()
     return solved_problems
 
 def get_user_in_group(group_id):
@@ -80,6 +93,7 @@ def get_user_in_group(group_id):
         pages = (user_in_group.get("count") - 1) // 50 + 1
     else:
         print("get_user_in_group 요청 실패")
+        is_interrupted = True
 
     users = []
     for page in range(1, pages + 1):
@@ -93,6 +107,7 @@ def get_user_in_group(group_id):
                 users.append(item.get("handle"))
         else:
             print("get_user_in_group 요청 실패")
+            is_interrupted = True
     return users
 
 def get_solved_by_group(group_id):
@@ -155,6 +170,7 @@ def get_problem_by_level(level):
         conn.close()
     else:
         print("get_problem_by_level 요청 실패")
+        is_interrupted = True
 
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
@@ -182,6 +198,7 @@ def get_problem_by_level(level):
                     problems.append(problem_data)
             else:
                 print("get_problem_by_level 요청 실패")
+                is_interrupted = True
 
         problems_str = json.dumps(problems)
         cur.execute("UPDATE level_problem SET problem_data = ? WHERE level = ?", (problems_str, level))  
@@ -209,7 +226,7 @@ def get_unsolved_by_group(group_id):
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
 
-    # 24시간 안에 풀린 문제 problem_24hr에 저장
+    # 24시간 안에 풀린 문제 solved_in_24hr에 저장
     cur.execute("DELETE FROM problem_24hr")
     cur.execute("SELECT * FROM problem") 
     prev_problem = [row[0] for row in cur.fetchall()]
@@ -237,7 +254,7 @@ def get_unsolved_by_group(group_id):
             unsolved_problem.extend(unsolved_level_problem)
 
     for problem in unsolved_problem:
-        cur.execute("INSERT INTO unsolved_problem (problem_num, problem_title, problem_lev, problem_link) VALUES (?, ?, ?, ?)", 
+        cur.execute("INSERT or REPLACE INTO unsolved_problem (problem_num, problem_title, problem_lev, problem_link) VALUES (?, ?, ?, ?)", 
                     (problem[0], problem[1], problem[2], f"https://www.acmicpc.net/problem/{problem[0]}"))
     conn.commit()
     cur.close()
@@ -245,10 +262,14 @@ def get_unsolved_by_group(group_id):
 
     # 랭킹에 쓰이는 그룹 내 유저가 푼 누적 문제 수 DB에 저장
     group_users = get_user_in_group(group_id)
+    conn = sqlite3.connect(str(group_id)+'_unsolved.db')
+    cur = conn.cursor()
     for user in group_users:
-        pages, items = check_user(user, True)
-        get_solved_by_user = get_solved(user, pages, items)
-        get_users_solved_count_in_24hr(user, solved_in_24hr, get_solved_by_user)
+        cur.execute("SELECT solved_list FROM baekjoon_user WHERE id = ?", (user,))
+        row = cur.fetchone()
+        solved_list_str = row[0]
+        solved_list = json.loads(solved_list_str)   
+        get_users_solved_count_in_24hr(user, solved_in_24hr, solved_list)
     return unsolved_problem
 
 def get_solved_in_24hr(prev_problem, current_problem):
@@ -309,9 +330,31 @@ def update_user_rank(group_id):
     conn.close()   
     return
 
+def copy_db(group_id):
+    '''
+    기존 db 파일 복사하여 백업
+    :param int group_id: 그룹 아이디
+    '''
+    copy_db = sqlite3.connect(str(group_id)+'_copy_unsolved.db') # create a memory database
+    origin_db = sqlite3.connect(str(group_id)+'_unsolved.db')
+    query = "".join(line for line in origin_db.iterdump())
+    copy_db.executescript(query)
+    copy_db.close()
+    origin_db.close()
+    
 group_id = 600 #405
-db_setting(group_id)
+db_setting(group_id) 
+copy_db(group_id)
 unsolved_problems = get_unsolved_by_group(group_id)
 print(unsolved_problems)
 print(len(unsolved_problems))
 update_user_rank(group_id)
+
+# 중간에 오류 발생해서 중단되면 업데이트 된 db 삭제하고, 백업해둔 db로 복구
+if is_interrupted:
+    sleep(2)
+    os.remove(str(group_id)+'_unsolved.db')
+    os.rename(str(group_id)+'_copy_unsolved.db', str(group_id)+'_unsolved.db')
+else:
+    sleep(2)
+    os.remove(str(group_id)+'_copy_unsolved.db')

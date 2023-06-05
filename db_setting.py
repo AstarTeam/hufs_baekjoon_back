@@ -5,10 +5,14 @@ def db_setting(group_id):
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
 
+    # 백준 사이트의 그룹 내 모든 유저 id, 푼 문제 수, 우리 사이트에서 사용하는 누적 개수 저장
+    cur.execute('''CREATE TABLE IF NOT EXISTS baekjoon_user(
+                id text PRIMARY KEY,
+                solved int,
+                accume_count int default 0)''')
+
     # 유저 닉네임, 푼 문제 수 이후 회원가입 시 정보 저장
     cur.execute('''CREATE TABLE IF NOT EXISTS user(
-                name text, 
-                solved int, 
                 user_id text PRIMARY KEY, 
                 user_pw text, 
                 user_name text, 

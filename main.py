@@ -15,7 +15,6 @@ from models import UnsolvedProblem, User, Challengers
 from unsolved_problem_project import get_unsolved_by_group
 
 from apscheduler.schedulers.background import BackgroundScheduler
-import datetime
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 SECRET_KEY = "4ab2fce7a6bd79e1c014396315ed322dd6edb1c5d975c6b74a2904135172c03c"
@@ -369,6 +368,7 @@ def challenge_problem(problem_num: int, user_id: str, db: Session = Depends(get_
     problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
     problem.problem_challengers += 1
     db.commit()
+    return {"message": "도전자 +."}
 
 
 @app.post("/problem/{problem_num}/{user_id}/unchallenge")
@@ -380,6 +380,7 @@ def unchallenge_problem(problem_num: int, user_id: str, db: Session = Depends(ge
     problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
     problem.problem_challengers -= 1
     db.commit()
+    return {"message": "도전자 -."}
 
 
 # 12시 정각마다 업데이트 => 배포시 주석 해제

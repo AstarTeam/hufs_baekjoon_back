@@ -26,15 +26,15 @@ def check_user(user_id, is_checking_count):
         pages = (count - 1) // 50 + 1
 
         # user 테이블에 user_id에 대한 항목 있는지 확인
-        cur.execute("SELECT solved FROM user WHERE name = ?", (user_id,))
+        cur.execute("SELECT solved FROM baekjoon_user  WHERE id = ?", (user_id,))
         user_solved = cur.fetchone()
         if user_solved is None:  # 없으면 새로운 행 (아이디, 푼 문제 수) 추가
-            cur.execute("INSERT INTO user (name, solved) VALUES (?, ?)", (user_id, count))
+            cur.execute("INSERT INTO baekjoon_user (id, solved) VALUES (?, ?)", (user_id, count))
         elif user_solved[0] == count:  # 문제 수 변경되지 않았으면 더이상 검색 X
             if not is_checking_count:  # 랭킹에 푼 문제 수 갱신하는 경우면 아래 실행 X
                 pages = -1
         elif user_solved[0] != count:  # 문제 수 변경되었으면 solved 업데이트
-            cur.execute("UPDATE user SET solved = ? WHERE name = ?", (count, user_id))
+            cur.execute("UPDATE baekjoon_user SET solved = ? WHERE id = ?", (count, user_id))
         conn.commit()
         cur.close()
         conn.close()
@@ -49,7 +49,7 @@ def get_solved(user_id, pages, items):
     user_id와 check_user를 통해 받아온 pages와 items를 통해 해당 user가 푼 문제들의 번호를 (level의 내림차순) list로 반환
     :param str user_id: 유저 id
     :param int pages: 해당 유저가 푼 문제 페이지 수
-    :param list items: 해당 유저가 푼 문제들에 대한 정보 배열  
+    :param list items: 해당 유저가 푼 문제들에 대한 정보 배열
     :return list solved_problems: 해당 유저가 푼 문제들의 번호 list
     """
     url = f"https://solved.ac/api/v3/search/problem?query=s%40{user_id}&sort=level&direction=desc"
@@ -281,7 +281,7 @@ def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_probl
     cur = conn.cursor()
 
     # cur.execute("INSERT OR IGNORE INTO user(user_baekjoon_id) VALUES(?)", (user,))
-    cur.execute("SELECT user_solved_count FROM user WHERE name = ?", (user,))
+    cur.execute("SELECT accume_count FROM baekjoon_user WHERE id = ?", (user,))
     row = cur.fetchone()
     prev_solved_count = row[0]
     conn.commit()
@@ -294,7 +294,7 @@ def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_probl
 
     conn = sqlite3.connect(str(group_id) + '_unsolved.db')
     cur = conn.cursor()
-    cur.execute("UPDATE user SET user_solved_count = ? WHERE name = ?", (total_count, user))
+    cur.execute("UPDATE baekjoon_user SET accume_count = ? WHERE id = ?", (total_count, user))
     conn.commit()
     cur.close()
     conn.close()
@@ -310,10 +310,10 @@ def update_user_rank(group_id):
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM user")
-    cur.execute("SELECT name, RANK() OVER(ORDER BY user_solved_count DESC) rank FROM user")
+    cur.execute("SELECT user_baekjoon_id, RANK() OVER(ORDER BY user_solved_count DESC) rank FROM user where user_auth==1")
     rows = cur.fetchall()
     for row in rows:
-        cur.execute("UPDATE user SET user_rank = ? WHERE name = ?", (row[1], row[0]))
+        cur.execute("UPDATE user SET user_rank = ? WHERE user_baekjoon_id = ?", (row[1], row[0]))
         conn.commit()
 
     cur.close()
@@ -322,8 +322,8 @@ def update_user_rank(group_id):
 
 
 group_id = 600  # 405
-db_setting(group_id)
-unsolved_problems = get_unsolved_by_group(group_id)
-print(unsolved_problems)
-print(len(unsolved_problems))
-update_user_rank(group_id)
+# db_setting(group_id)
+# unsolved_problems = get_unsolved_by_group(group_id)
+# print(unsolved_problems)
+# print(len(unsolved_problems))
+# update_user_rank(group_id)

@@ -172,6 +172,8 @@ def update_my_page_pw(db: Session, db_user: User, user_update: str):
 def delete_my_page(db: Session, db_user: User):
     _user = db.query(Challengers).filter(Challengers.challenger_id == db_user.user_id).all()
     for user in _user:
+        _problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == user.challenge_problem).first()
+        _problem.problem_challengers -= 1
         db.delete(user)
     db.delete(db_user)
     db.commit()

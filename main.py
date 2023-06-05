@@ -32,7 +32,6 @@ app = FastAPI()
 #     allow_headers=["*"],
 # )
 
-
 # 헤더 정보의 토큰값 읽어서 사용자 객체를 리턴
 def get_current_user(token: str = Depends(oauth2_scheme),
                      db: Session = Depends(get_db)):
@@ -373,12 +372,18 @@ def update_recommend():
 @app.post("/problem/challenge/{problem_num}")
 def challenge_problem(problem_num: int, current_user: User = Depends(get_current_user),
                       db: Session = Depends(get_db)):
-    new_challenge = Challengers(challenger_id=current_user.user_id, challenge_problem=problem_num)
-    db.add(new_challenge)
-    problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
-    problem.problem_challengers += 1
-    db.commit()
-    return {"message": "도전자 +."}
+    challenger = db.query(Challengers).filter(
+        Challengers.challenge_problem == problem_num,
+        Challengers.challenger_id == current_user.user_id).first()
+    if challenger != None:
+        new_challenge = Challengers(challenger_id=current_user.user_id, challenge_problem=problem_num)
+        db.add(new_challenge)
+        problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
+        problem.problem_challengers += 1
+        db.commit()
+        return {"message": "도전자 +."}
+    else:
+        return {"message": "challenger already on table"}
 
 
 @app.post("/problem/unchallenge/{problem_num}")
@@ -387,11 +392,14 @@ def unchallenge_problem(problem_num: int, current_user: User = Depends(get_curre
     unchallenge = db.query(Challengers).filter(
         Challengers.challenge_problem == problem_num,
         Challengers.challenger_id == current_user.user_id).first()
-    db.delete(unchallenge)
-    problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
-    problem.problem_challengers -= 1
-    db.commit()
-    return {"message": "도전자 -."}
+    if unchallenge != None:
+        db.delete(unchallenge)
+        problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
+        problem.problem_challengers -= 1
+        db.commit()
+        return {"message": "도전자 -."}
+    else:
+        return {"message": "challenger not on table"}
 
 
 # 12시 정각마다 업데이트 => 배포시 주석 해제

@@ -3,6 +3,7 @@ from time import sleep
 import requests
 import sqlite3
 import os
+import shutil
 from db_setting import db_setting
 
 is_interrupted = False
@@ -292,7 +293,6 @@ def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_probl
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
 
-
     cur.execute("SELECT accume_count FROM baekjoon_user WHERE id = ?", (user,))
     row = cur.fetchone()
     prev_solved_count = row[0]
@@ -331,18 +331,14 @@ def update_user_rank(group_id):
     conn.close()   
     return
 
-
 def copy_db(group_id):
     '''
     기존 db 파일 복사하여 백업
     :param int group_id: 그룹 아이디
     '''
-    copy_db = sqlite3.connect(str(group_id)+'_copy_unsolved.db') # create a memory database
-    origin_db = sqlite3.connect(str(group_id)+'_unsolved.db')
-    query = "".join(line for line in origin_db.iterdump())
-    copy_db.executescript(query)
-    copy_db.close()
-    origin_db.close()
+    origin_file_path = os.path.join(os.getcwd(), str(group_id)+'_unsolved.db')
+    copy_file_path = os.path.join(os.getcwd(), str(group_id)+'_copy_unsolved.db')
+    shutil.copy(origin_file_path, copy_file_path)
     
 group_id = 405 #600
 db_setting(group_id) 
@@ -354,8 +350,7 @@ update_user_rank(group_id)
 
 # 중간에 오류 발생해서 중단되면 업데이트 된 db 삭제하고, 백업해둔 db로 복구
 if is_interrupted:
-    os.remove(str(group_id)+'_unsolved.db')
-    os.rename(str(group_id)+'_copy_unsolved.db', str(group_id)+'_unsolved.db')
+    os.remove(os.path.join(os.getcwd(), str(group_id)+'_unsolved.db'))
+    os.rename(os.path.join(os.getcwd(),str(group_id)+'_copy_unsolved.db'), str(group_id)+'_unsolved.db')
 else:
-    os.remove(str(group_id)+'_copy_unsolved.db')
-
+    os.remove(os.path.join(os.getcwd(), str(group_id)+'_copy_unsolved.db'))

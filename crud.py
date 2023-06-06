@@ -114,7 +114,7 @@ def read_fame(db: Session, limit: int = 10):
     return [{"name": user_id, "count": user_solved_count} for user_id, user_solved_count in result]
 
 
-# 데이터 명세 5 - POST 회원가입(작성중)
+# 데이터 명세 5 - POST 회원가입
 def create_user(db: Session, user_create=schemas.UserCreate):
     rand = randint(100000, 999999)
     db_user = User(user_id=user_create.user_id, user_pw=pwd_context.hash(user_create.user_pw),

@@ -266,9 +266,6 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
     }
 
 
-# 데이터 명세 6.2 POST 로그아웃
-
-
 # 데이터 명세 7 - GET 마이페이지
 @app.get("/my-page/read")
 async def get_my_page(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -282,8 +279,7 @@ async def get_my_page(db: Session = Depends(get_db), current_user: User = Depend
 @app.put("/my-page/update/name")
 async def update_my_page_name(_update_name: str, db: Session = Depends(get_db),
                               current_user: User = Depends(get_current_user)):
-    db_user = crud.read_user(db, user_id=current_user.user_id)
-    crud.update_my_page_name(db=db, db_user=db_user, user_update=_update_name)
+    crud.update_my_page_name(db=db, db_user=current_user, user_update=_update_name)
     return {"message": "닉네임이 변경되었습니다."}
 
 
@@ -291,24 +287,21 @@ async def update_my_page_name(_update_name: str, db: Session = Depends(get_db),
 @app.put("/my-page/update/password")
 async def update_my_page_password(_update_pw: str, db: Session = Depends(get_db),
                                   current_user: User = Depends(get_current_user)):
-    db_user = crud.read_user(db, user_id=current_user.user_id)
-    crud.update_my_page_pw(db=db, db_user=db_user, user_update=_update_pw)
+    crud.update_my_page_pw(db=db, db_user=current_user, user_update=_update_pw)
     return {"message": "비밀번호가 변경되었습니다."}
 
 
 # 데이터 명세 8.3 - DELETE 마이페이지
 @app.delete("/my-page/delete")
 async def delete_my_page(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_user = crud.read_user(db, user_id=current_user.user_id)
-    crud.delete_my_page(db=db, db_user=db_user)
+    crud.delete_my_page(db=db, db_user=current_user)
     return {"message": "회원탈퇴가 완료되었습니다."}
 
 
 # 데이터 명세 9 - GET 백준 인증 - 난수 받기
 @app.get("/my-page/rand/{user_id}")
 async def get_my_page_rand(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    db_user = crud.read_user(db, user_id=current_user.user_id)
-    rand = crud.read_random_number(db=db, user_id=db_user.user_id)
+    rand = crud.read_random_number(db=db, user_id=current_user.user_id)
     return rand
 
 
@@ -323,8 +316,7 @@ async def post_my_page_auth(file: UploadFile, boj_id: str, current_user: User = 
     with open(os.path.join(UPLOAD_DIR, filename), "wb") as fp:
         fp.write(content)  # 서버 로컬 스토리지에 이미지 저장 (쓰기)
 
-    db_user = crud.read_user(db, user_id=current_user.user_id)
-    crud.update_my_page_auth(db=db, db_user=db_user, boj_id=boj_id)
+    crud.update_my_page_auth(db=db, db_user=current_user, boj_id=boj_id)
     return {"message": "인증 신청이 완료되었습니다."}
 
 

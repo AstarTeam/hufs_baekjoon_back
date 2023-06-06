@@ -8,7 +8,8 @@ import unsolved_problem_project
 from database import SessionLocal
 from models import UnsolvedProblem, Rank, User, Challengers, Recommend
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto",
+                           bcrypt__rounds=8)
 
 
 def is_user_challenged(db, user_id: str, problem_num: int):

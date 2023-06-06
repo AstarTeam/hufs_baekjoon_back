@@ -292,6 +292,7 @@ def get_users_solved_count_in_24hr(user, group_solved_problem, user_solved_probl
     conn = sqlite3.connect(str(group_id)+'_unsolved.db')
     cur = conn.cursor()
 
+
     cur.execute("SELECT accume_count FROM baekjoon_user WHERE id = ?", (user,))
     row = cur.fetchone()
     prev_solved_count = row[0]
@@ -330,6 +331,7 @@ def update_user_rank(group_id):
     conn.close()   
     return
 
+
 def copy_db(group_id):
     '''
     기존 db 파일 복사하여 백업
@@ -356,3 +358,4 @@ if is_interrupted:
     os.rename(str(group_id)+'_copy_unsolved.db', str(group_id)+'_unsolved.db')
 else:
     os.remove(str(group_id)+'_copy_unsolved.db')
+

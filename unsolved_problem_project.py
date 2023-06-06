@@ -342,7 +342,7 @@ def copy_db(group_id):
     copy_db.close()
     origin_db.close()
     
-group_id = 600 #405
+group_id = 405 #600
 db_setting(group_id) 
 copy_db(group_id)
 unsolved_problems = get_unsolved_by_group(group_id)
@@ -352,9 +352,7 @@ update_user_rank(group_id)
 
 # 중간에 오류 발생해서 중단되면 업데이트 된 db 삭제하고, 백업해둔 db로 복구
 if is_interrupted:
-    sleep(2)
     os.remove(str(group_id)+'_unsolved.db')
     os.rename(str(group_id)+'_copy_unsolved.db', str(group_id)+'_unsolved.db')
 else:
-    sleep(2)
     os.remove(str(group_id)+'_copy_unsolved.db')

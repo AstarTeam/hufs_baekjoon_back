@@ -11,7 +11,7 @@ from models import UnsolvedProblem, Rank, User, Challengers, Recommend
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def is_user_challenged(db: Session, user_id: str, problem_num: int):
+def is_user_challenged(db, user_id: str, problem_num: int):
     return True if db.query(Challengers).filter(Challengers.challenger_id == user_id,
                                                 Challengers.challenge_problem == problem_num).first() else False
 
@@ -172,6 +172,8 @@ def update_my_page_pw(db: Session, db_user: User, user_update: str):
 def delete_my_page(db: Session, db_user: User):
     _user = db.query(Challengers).filter(Challengers.challenger_id == db_user.user_id).all()
     for user in _user:
+        _problem = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == user.challenge_problem).first()
+        _problem.problem_challengers -= 1
         db.delete(user)
     db.delete(db_user)
     db.commit()

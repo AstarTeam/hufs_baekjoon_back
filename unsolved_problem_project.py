@@ -339,9 +339,10 @@ def copy_db(group_id):
     origin_file_path = os.path.join(os.getcwd(), str(group_id)+'_unsolved.db')
     copy_file_path = os.path.join(os.getcwd(), str(group_id)+'_copy_unsolved.db')
     shutil.copy(origin_file_path, copy_file_path)
-    
+
+
 group_id = 405 #600
-db_setting(group_id) 
+db_setting(group_id)
 copy_db(group_id)
 unsolved_problems = get_unsolved_by_group(group_id)
 print(unsolved_problems)

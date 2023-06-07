@@ -44,8 +44,8 @@ class User(Base):
 class Challengers(Base):
     __tablename__ = "challengers"
 
-    challenger_id = Column(String(255), primary_key=True)
-    challenge_problem = Column(Integer, primary_key=True)
+    challenger_id = Column(String(255), primary_key=False)
+    challenge_problem = Column(Integer, primary_key=False)
 
 
 class Recommend(Base):

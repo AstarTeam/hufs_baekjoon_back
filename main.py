@@ -24,15 +24,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 app = FastAPI()
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:3000"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# 헤더 정보의 토큰값 읽어서 사용자 객체를 리턴
+
 def get_current_user(token: str = Depends(oauth2_scheme),
                      db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -64,7 +64,6 @@ async def save_unsolved_problems(group_id: str, db: Session = Depends(get_db)):
     return {"message": "Unsolved problems saved successfully"}
 
 
-# 데이터 명세 1.1 - GET 홈페이지 - 문제 리스트 기능(로그인 안 했을 때)
 @app.get("/unsolved-by-HUFS")
 async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, size: int = 15):  # 안 푼 문제 반환
     total, _problem_list = crud.read_unsolved_problems(db, user_id=None, skip=page * size, limit=size)
@@ -74,7 +73,6 @@ async def get_unsolved_problems(db: Session = Depends(get_db), page: int = 0, si
     }
 
 
-# 데이터 명세 1.2 - GET 홈페이지 - 문제 리스트 기능(로그인 했을 때)
 @app.get("/unsolved-by-HUFS/token")
 async def get_unsolved_problems_token(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
                                       page: int = 0, size: int = 15):  # 안 푼 문제 반환
@@ -85,7 +83,6 @@ async def get_unsolved_problems_token(db: Session = Depends(get_db), current_use
     }
 
 
-# 데이터 명세 2.1.1 - GET 홈페이지 - 문제 정렬 기능 - GET 쉬운 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-lev")
 async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_lev(db, user_id=None, skip=page * size, limit=size)
@@ -95,7 +92,6 @@ async def get_problem_list_ordered_by_lev(db: Session = Depends(get_db), page: i
     }
 
 
-# 데이터 명세 2.1.2 - GET 홈페이지 - 문제 정렬 기능 - GET 쉬운 순 정렬(로그인 했을 때)
 @app.get("/problem-list-ordered-by-lev/token")
 async def get_problem_list_ordered_by_lev_token(db: Session = Depends(get_db),
                                                 current_user: User = Depends(get_current_user),
@@ -108,7 +104,6 @@ async def get_problem_list_ordered_by_lev_token(db: Session = Depends(get_db),
     }
 
 
-# 데이터 명세 2.2.1 - GET 홈페이지 - 문제 정렬 기능 - GET 어려운 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-lev-desc")
 async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_lev_desc(db, user_id=None, skip=page * size, limit=size)
@@ -118,7 +113,6 @@ async def get_problem_list_ordered_by_lev_desc(db: Session = Depends(get_db), pa
     }
 
 
-# 데이터 명세 2.2.2 - GET 홈페이지 - 문제 정렬 기능 - GET 어려운 순 정렬(로그인 했을 때)
 @app.get("/problem-list-ordered-by-lev-desc/token")
 async def get_problem_list_ordered_by_lev_desc_token(db: Session = Depends(get_db),
                                                      current_user: User = Depends(get_current_user), page: int = 0,
@@ -131,7 +125,6 @@ async def get_problem_list_ordered_by_lev_desc_token(db: Session = Depends(get_d
     }
 
 
-# 데이터 명세 2.3.1 - GET 홈페이지 - 문제 정렬 기능 - GET 도전자 많은 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-challengers")
 async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_challengers(db, user_id=None, skip=page * size, limit=size)
@@ -141,7 +134,6 @@ async def get_problem_list_ordered_by_challengers(db: Session = Depends(get_db),
     }
 
 
-# 데이터 명세 2.3.2 - GET 홈페이지 - 문제 정렬 기능 - GET 도전자 많은 순 정렬(로그인 했을 때)
 @app.get("/problem-list-ordered-by-challengers/token")
 async def get_problem_list_ordered_by_challengers_token(db: Session = Depends(get_db),
                                                         current_user: User = Depends(get_current_user), page: int = 0,
@@ -154,7 +146,6 @@ async def get_problem_list_ordered_by_challengers_token(db: Session = Depends(ge
     }
 
 
-# 데이터 명세 2.4.1 - GET 홈페이지 - 문제 정렬 기능 - 도전자 적은 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-challengers-desc")
 async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get_db), page: int = 0, size: int = 15):
     total, _problem_list = crud.read_problem_list_ordered_by_challengers_desc(db, user_id=None, skip=page * size,
@@ -165,7 +156,6 @@ async def get_problem_list_ordered_by_challengers_desc(db: Session = Depends(get
     }
 
 
-# 데이터 명세 2.4.2 - GET 홈페이지 - 문제 정렬 기능 - 도전자 적은 순 정렬(로그인 안 했을 때)
 @app.get("/problem-list-ordered-by-challengers-desc/token")
 async def get_problem_list_ordered_by_challengers_desc_token(db: Session = Depends(get_db),
                                                              current_user: User = Depends(get_current_user),
@@ -178,7 +168,6 @@ async def get_problem_list_ordered_by_challengers_desc_token(db: Session = Depen
     }
 
 
-# 데이터 명세 2.5 - GET 홈페이지 - 문제 정렬 기능 - 도전 중인 문제
 @app.get("/problem-list-challenging/token")
 async def get_problem_list_challenging(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
                                        page: int = 0, size: int = 15):
@@ -190,7 +179,6 @@ async def get_problem_list_challenging(db: Session = Depends(get_db), current_us
     }
 
 
-# 데이터 명세 2.6 - GET 홈페이지 - 문제 정렬 기능 - 안 푼 문제
 @app.get("/problem-list-not-challenged/token")
 async def get_problem_list_not_challenged(db: Session = Depends(get_db), current_user: User = Depends(get_current_user),
                                           page: int = 0, size: int = 15):
@@ -214,14 +202,12 @@ async def get_user_info(db: Session = Depends(get_db)):
     return user_info
 
 
-# 데이터 명세 4 - GET 홈페이지 - 명예의 전당
 @app.get("/fame")
 async def get_fame(db: Session = Depends(get_db)):
     fame = crud.read_fame(db)
     return {"userList": fame}
 
 
-# 데이터 명세 5. 회원가입 - 아이디 중복 확인
 @app.get("/user-create/user-id-check/{user_id}")
 def user_id_check(user_id: str, db: Session = Depends(get_db)):
     user = crud.read_user_by_id(db, user_id=user_id)
@@ -230,7 +216,6 @@ def user_id_check(user_id: str, db: Session = Depends(get_db)):
     return {"message": "사용 가능한 아이디입니다."}
 
 
-# 데이터 명세 5. 회원가입 - 닉네임 중복 확인
 @app.get("/user-create/user-name-check/{user_name}")
 def user_name_check(user_name: str, db: Session = Depends(get_db)):
     user = crud.read_user_by_name(db, user_name=user_name)
@@ -239,18 +224,15 @@ def user_name_check(user_name: str, db: Session = Depends(get_db)):
     return {"message": "사용 가능한 이름입니다."}
 
 
-# 데이터 명세 5. 회원가입
 @app.post("/user-create/join")
 def user_create(_user_create: schemas.UserCreate, db: Session = Depends(get_db)):
     crud.create_user(db=db, user_create=_user_create)
     return {"message": "회원가입이 완료되었습니다."}
 
 
-# 데이터 명세 6. POST 로그인
 @app.post("/login", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
                            db: Session = Depends(get_db)):
-    # check user and password
     user = crud.read_user(db, form_data.username)
     if not user or not pwd_context.verify(form_data.password, user.user_pw):
         raise HTTPException(
@@ -259,7 +241,6 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # make access token
     data = {
         "sub": user.user_id,
         "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -274,7 +255,6 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
     }
 
 
-# 데이터 명세 7 - GET 마이페이지
 @app.get("/my-page/read")
 async def get_my_page(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not current_user:
@@ -283,7 +263,6 @@ async def get_my_page(db: Session = Depends(get_db), current_user: User = Depend
     return my_page
 
 
-# 데이터 명세 8.1 - PUT 마이페이지(닉네임)
 @app.put("/my-page/update/name")
 async def update_my_page_name(_update_name: str, db: Session = Depends(get_db),
                               current_user: User = Depends(get_current_user)):
@@ -291,7 +270,6 @@ async def update_my_page_name(_update_name: str, db: Session = Depends(get_db),
     return {"message": "닉네임이 변경되었습니다."}
 
 
-# 데이터 명세 8.2 - PUT 마이페이지(비밀번호)
 @app.put("/my-page/update/password")
 async def update_my_page_password(_update_pw: str, db: Session = Depends(get_db),
                                   current_user: User = Depends(get_current_user)):
@@ -299,36 +277,32 @@ async def update_my_page_password(_update_pw: str, db: Session = Depends(get_db)
     return {"message": "비밀번호가 변경되었습니다."}
 
 
-# 데이터 명세 8.3 - DELETE 마이페이지
 @app.delete("/my-page/delete")
 async def delete_my_page(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     crud.delete_my_page(db=db, db_user=current_user)
     return {"message": "회원탈퇴가 완료되었습니다."}
 
 
-# 데이터 명세 9 - GET 백준 인증 - 난수 받기
 @app.get("/my-page/rand/{user_id}")
 async def get_my_page_rand(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     rand = crud.read_random_number(db=db, user_id=current_user.user_id)
     return rand
 
 
-# 데이터 명세 10 - POST 백준 인증
 @app.post("/my-page/auth")
 async def post_my_page_auth(file: UploadFile, boj_id: str, current_user: User = Depends(get_current_user),
                             db: Session = Depends(get_db)):
-    UPLOAD_DIR = "./photo"  # 이미지를 저장할 서버 경로
+    UPLOAD_DIR = "./photo"
 
     content = await file.read()
-    filename = f"{current_user.user_id}.jpg"  # uuid로 유니크한 파일명으로 변경
+    filename = f"{current_user.user_id}.jpg"
     with open(os.path.join(UPLOAD_DIR, filename), "wb") as fp:
-        fp.write(content)  # 서버 로컬 스토리지에 이미지 저장 (쓰기)
+        fp.write(content)
 
     crud.update_my_page_auth(db=db, db_user=current_user, boj_id=boj_id)
     return {"message": "인증 신청이 완료되었습니다."}
 
 
-# 데이터 명세 11.1 - GET 홈페이지 - 검색(로그인 안 했을 때)
 @app.get("/search")
 async def get_search(problem_num: str, db: Session = Depends(get_db)):
     search = crud.read_search(db, problem_num=problem_num, user_id=None)
@@ -338,7 +312,6 @@ async def get_search(problem_num: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="문제를 찾을 수 없습니다.")
 
 
-# 데이터 명세 11.2 = GET 홈페이지 - 검색(로그인 했을 때)
 @app.get("/search/token")
 async def get_search_token(problem_num: str, db: Session = Depends(get_db),
                            current_user: User = Depends(get_current_user)):
@@ -349,7 +322,6 @@ async def get_search_token(problem_num: str, db: Session = Depends(get_db),
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="문제를 찾을 수 없습니다.")
 
 
-# 데이터 명세 12 - GET 추천 문제(로그인 안 했을 때)
 @app.get("/recommend")
 async def get_recommend(db: Session = Depends(get_db)):
     recommend = crud.read_recommend(db)
@@ -360,7 +332,6 @@ def update_recommend():
     crud.update_recommend()
 
 
-# 도전자 수 count
 @app.post("/problem/challenge/{problem_num}")
 def challenge_problem(problem_num: int, current_user: User = Depends(get_current_user),
                       db: Session = Depends(get_db)):
@@ -394,13 +365,6 @@ def unchallenge_problem(problem_num: int, current_user: User = Depends(get_curre
         return {"message": "challenger not on table"}
 
 
-# 12시 정각마다 업데이트 => 배포시 주석 해제
-# scheduler = BackgroundScheduler()
-# scheduler.add_job(update_recommend, 'cron', hour=0)
-# scheduler.start()
-
-
-# 5초마다 업데이트 하는 테스트용
-# scheduler = BackgroundScheduler()
-# scheduler.add_job(update_recommend, 'interval', seconds=5)
-# scheduler.start()
+scheduler = BackgroundScheduler()
+scheduler.add_job(update_recommend, 'cron', hour=0)
+scheduler.start()

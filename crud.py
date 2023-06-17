@@ -76,7 +76,6 @@ def read_problem_list_ordered_by_challengers_desc(db: Session, user_id: str, ski
     return total, problem_list
 
 
-# 데이터 명세 2.5 - GET 홈페이지 - 문제 정렬 기능 - 도전 중인 문제
 def read_problem_list_challenging(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num
                                                      .in_(db.query(Challengers.challenge_problem)
@@ -87,7 +86,6 @@ def read_problem_list_challenging(db: Session, user_id: str, skip: int = 0, limi
     return total, problem_list
 
 
-# 데이터 명세 2.6 - GET 홈페이지 - 문제 정렬 기능 - 안 푼 문제
 def read_problem_list_not_challenged(db: Session, user_id: str, skip: int = 0, limit: int = 15):
     _problem_list = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num
                                                      .notin_(db.query(Challengers.challenge_problem)
@@ -108,14 +106,12 @@ def read_user_info(db: Session):
     return user_info
 
 
-# 데이터 명세 4 - GET 홈페이지 - 명예의 전당
 def read_fame(db: Session, limit: int = 10):
     result = db.query(User.user_name, User.user_solved_count).filter(User.user_name.isnot(None)) \
         .filter(User.user_solved_count.isnot(None)).order_by(User.user_solved_count.desc()).limit(limit).all()
     return [{"name": user_id, "count": user_solved_count} for user_id, user_solved_count in result]
 
 
-# 데이터 명세 5 - POST 회원가입
 def create_user(db: Session, user_create=schemas.UserCreate):
     rand = randint(100000, 999999)
     db_user = User(user_id=user_create.user_id, user_pw=pwd_context.hash(user_create.user_pw),
@@ -137,7 +133,6 @@ def read_user_by_name(db: Session, user_name: str):
     return db.query(User).filter(User.user_name == user_name).first()
 
 
-# 데이터 명세 7 - GET 마이페이지
 def read_my_page(db: Session, db_user: User):
     unsolved_problem_project.update_user_rank(405)
     if db_user.user_auth == 1:
@@ -155,21 +150,18 @@ def read_my_page(db: Session, db_user: User):
         return {"user_id": my_page[0], "user_name": my_page[1], "user_solved_count": my_page[2]}
 
 
-# 데이터 명세 8.1 - PUT 마이페이지(닉네임)
 def update_my_page_name(db: Session, db_user: User, user_update: str):
     db_user.user_name = user_update
     db.add(db_user)
     db.commit()
 
 
-# 데이터 명세 8.2 - PUT 마이페이지(비밀번호)
 def update_my_page_pw(db: Session, db_user: User, user_update: str):
     db_user.user_pw = pwd_context.hash(user_update)
     db.add(db_user)
     db.commit()
 
 
-# 데이터 명세 8.3 - DELETE 마이페이지
 def delete_my_page(db: Session, db_user: User):
     _user = db.query(Challengers).filter(Challengers.challenger_id == db_user.user_id).all()
     for user in _user:
@@ -180,7 +172,6 @@ def delete_my_page(db: Session, db_user: User):
     db.commit()
 
 
-# 데이터 명세 9 - GET 백준 인증 - 난수 받기
 def read_random_number(db: Session, user_id: str):
     result = db.query(User.user_rand).filter(User.user_rand.isnot(None)).filter(User.user_id == user_id).first()
     return {"rand": user_rand for user_rand in result}
@@ -193,7 +184,6 @@ def update_my_page_auth(db: Session, db_user: User, boj_id: str):
     db.commit()
 
 
-# 데이터 명세 11.2 - GET 홈페이지 - 검색(로그인 했을 때)
 def read_search(db: Session, user_id: str, problem_num: str):
     result = db.query(UnsolvedProblem).filter(UnsolvedProblem.problem_num == problem_num).first()
     if result:
@@ -239,7 +229,6 @@ def update_recommend():
     db.close()
 
 
-# 데이터 명세 12 - GET 추천 문제 가져오기
 def read_recommend(db: Session):
     result = db.query(Recommend).all()
     return result
